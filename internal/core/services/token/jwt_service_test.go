@@ -6,7 +6,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/ncfex/dcart/auth-service/internal/core/services/token"
+	"github.com/ncfex/dcart-auth/internal/core/services/token"
 	"github.com/stretchr/testify/assert"
 )
 

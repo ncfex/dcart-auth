@@ -7,15 +7,15 @@ import (
 	"os"
 	"time"
 
-	"github.com/ncfex/dcart/auth-service/internal/adapters/primary/http/handlers"
-	"github.com/ncfex/dcart/auth-service/internal/adapters/primary/http/response"
-	"github.com/ncfex/dcart/auth-service/internal/adapters/secondary/postgres"
-	"github.com/ncfex/dcart/auth-service/internal/core/services/authentication"
-	"github.com/ncfex/dcart/auth-service/internal/core/services/password"
-	"github.com/ncfex/dcart/auth-service/internal/core/services/refresh"
-	"github.com/ncfex/dcart/auth-service/internal/core/services/token"
-	"github.com/ncfex/dcart/auth-service/internal/infrastructure/config"
-	postgresDB "github.com/ncfex/dcart/auth-service/internal/infrastructure/database/postgres"
+	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/handlers"
+	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/response"
+	"github.com/ncfex/dcart-auth/internal/adapters/secondary/postgres"
+	"github.com/ncfex/dcart-auth/internal/core/services/authentication"
+	"github.com/ncfex/dcart-auth/internal/core/services/password"
+	"github.com/ncfex/dcart-auth/internal/core/services/refresh"
+	"github.com/ncfex/dcart-auth/internal/core/services/token"
+	"github.com/ncfex/dcart-auth/internal/infrastructure/config"
+	postgresDB "github.com/ncfex/dcart-auth/internal/infrastructure/database/postgres"
 )
 
 func main() {

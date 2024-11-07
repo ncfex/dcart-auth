@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ncfex/dcart/auth-service/internal/adapters/primary/http/response"
+	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/response"
 )
 
 var ErrInternalServerErrorStr = "internal server error"

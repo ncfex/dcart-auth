@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ncfex/dcart/auth-service/internal/core/ports"
-	"github.com/ncfex/dcart/auth-service/internal/core/services/refresh"
-	"github.com/ncfex/dcart/auth-service/internal/domain"
-	"github.com/ncfex/dcart/auth-service/internal/domain/errors"
+	"github.com/ncfex/dcart-auth/internal/core/ports"
+	"github.com/ncfex/dcart-auth/internal/core/services/refresh"
+	"github.com/ncfex/dcart-auth/internal/domain"
+	"github.com/ncfex/dcart-auth/internal/domain/errors"
 )
 
 type service struct {

@@ -3,7 +3,7 @@ package password_test
 import (
 	"testing"
 
-	"github.com/ncfex/dcart/auth-service/internal/core/services/password"
+	"github.com/ncfex/dcart-auth/internal/core/services/password"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/bcrypt"
 )

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/ncfex/dcart/auth-service/internal/domain"
+	"github.com/ncfex/dcart-auth/internal/domain"
 )
 
 type UserAuthenticator interface {

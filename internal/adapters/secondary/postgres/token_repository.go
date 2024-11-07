@@ -6,10 +6,10 @@ import (
 	"errors"
 	"time"
 
-	"github.com/ncfex/dcart/auth-service/internal/core/ports"
-	"github.com/ncfex/dcart/auth-service/internal/domain"
-	"github.com/ncfex/dcart/auth-service/internal/infrastructure/database/postgres"
-	database "github.com/ncfex/dcart/auth-service/internal/infrastructure/database/sqlc"
+	"github.com/ncfex/dcart-auth/internal/core/ports"
+	"github.com/ncfex/dcart-auth/internal/domain"
+	"github.com/ncfex/dcart-auth/internal/infrastructure/database/postgres"
+	database "github.com/ncfex/dcart-auth/internal/infrastructure/database/sqlc"
 )
 
 var (

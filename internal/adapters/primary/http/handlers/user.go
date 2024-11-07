@@ -4,8 +4,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/ncfex/dcart/auth-service/internal/adapters/primary/http/request"
-	"github.com/ncfex/dcart/auth-service/internal/domain"
+	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/request"
+	"github.com/ncfex/dcart-auth/internal/domain"
 )
 
 func (h *handler) profile(w http.ResponseWriter, r *http.Request) {

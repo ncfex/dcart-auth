@@ -4,9 +4,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ncfex/dcart/auth-service/internal/adapters/primary/http/middleware"
-	"github.com/ncfex/dcart/auth-service/internal/adapters/primary/http/response"
-	"github.com/ncfex/dcart/auth-service/internal/core/ports"
+	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/middleware"
+	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/response"
+	"github.com/ncfex/dcart-auth/internal/core/ports"
 )
 
 type handler struct {
@@ -76,6 +76,7 @@ func (h *handler) Router() *http.ServeMux {
 
 	// protected
 	mux.Handle("GET /profile", accessTokenProtectedChain(http.HandlerFunc(h.profile)))
+	mux.Handle("POST /validate", accessTokenProtectedChain(http.HandlerFunc(h.validateToken)))
 
 	// refresh required
 	mux.Handle("POST /refresh", refreshTokenRequiredChain(http.HandlerFunc(h.refreshToken)))

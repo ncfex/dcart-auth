@@ -3,7 +3,7 @@ package password
 import (
 	"errors"
 
-	"github.com/ncfex/dcart/auth-service/internal/core/ports"
+	"github.com/ncfex/dcart-auth/internal/core/ports"
 	"golang.org/x/crypto/bcrypt"
 )
 

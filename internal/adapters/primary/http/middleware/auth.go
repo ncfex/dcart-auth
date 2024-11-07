@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ncfex/dcart/auth-service/internal/adapters/primary/http/request"
-	"github.com/ncfex/dcart/auth-service/internal/adapters/primary/http/response"
-	"github.com/ncfex/dcart/auth-service/internal/core/ports"
-	"github.com/ncfex/dcart/auth-service/internal/domain"
+	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/request"
+	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/response"
+	"github.com/ncfex/dcart-auth/internal/core/ports"
+	"github.com/ncfex/dcart-auth/internal/domain"
 )
 
 func RequireJWTAuth(

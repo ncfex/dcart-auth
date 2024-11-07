@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/ncfex/dcart/auth-service/internal/adapters/primary/http/request"
+	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/request"
 )
 
 func (h *handler) refreshToken(w http.ResponseWriter, r *http.Request) {
