@@ -1,0 +1,12 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "internal/adapters/secondary/postgres/queries/"
+    schema: "internal/infrastructure/database/migrations/"
+    gen:
+      go:
+        package: "db"
+        out: "internal/infrastructure/database/sqlc"
+        emit_interface: true
+        emit_json_tags: true
+        json_tags_case_style: "snake"

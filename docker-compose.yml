@@ -1,0 +1,47 @@
+# docker-compose.yml
+# for development
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: auth-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: authdb
+      POSTGRES_USER: dev_user
+      POSTGRES_PASSWORD: dev_password
+    volumes:
+      - ${HOME}/personal/database/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev_user -d authdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: auth-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ${HOME}/personal/database/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: auth-pgadmin
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: test@test.com
+      PGADMIN_DEFAULT_PASSWORD: test
+    volumes:
+      - ${HOME}/personal/database/pgadmin:/var/lib/pgadmin
+    depends_on:
+      - postgres
