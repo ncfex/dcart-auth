@@ -8,7 +8,6 @@ import (
 	"github.com/ncfex/dcart-auth/internal/core/ports"
 	"github.com/ncfex/dcart-auth/internal/core/services/refresh"
 	"github.com/ncfex/dcart-auth/internal/domain"
-	"github.com/ncfex/dcart-auth/internal/domain/errors"
 )
 
 type service struct {
@@ -37,15 +36,20 @@ func NewAuthService(
 
 func (s *service) Register(ctx context.Context, username, password string) (*domain.User, error) {
 	if username == "" || password == "" {
-		return &domain.User{}, errors.ErrInvalidCredentials
+		return nil, domain.ErrInvalidCredentials
 	}
-	if _, err := s.userRepo.GetUserByUsername(ctx, username); err == nil {
-		return &domain.User{}, errors.ErrInvalidCredentials
+
+	_, err := s.userRepo.GetUserByUsername(ctx, username)
+	if err == nil {
+		return nil, domain.ErrUserAlreadyExists
+	}
+	if err != domain.ErrUserNotFound {
+		return nil, err
 	}
 
 	hashedPassword, err := s.passwordEncrypter.Hash(password)
 	if err != nil {
-		return &domain.User{}, domain.ErrUserAlreadyExists
+		return nil, err
 	}
 
 	user := &domain.User{
@@ -93,12 +97,12 @@ func (s *service) Login(ctx context.Context, username, password string) (*domain
 
 func (s *service) Refresh(ctx context.Context, token string) (*domain.TokenPair, error) {
 	if token == "" {
-		return nil, errors.ErrInvalidToken
+		return nil, domain.ErrTokenInvalid
 	}
 
 	ref, err := s.tokenRepo.GetTokenByTokenString(ctx, token)
 	if err != nil {
-		return nil, errors.ErrInvalidToken
+		return nil, domain.ErrTokenInvalid
 	}
 
 	fmt.Println(ref)
@@ -110,7 +114,7 @@ func (s *service) Refresh(ctx context.Context, token string) (*domain.TokenPair,
 
 	accessToken, err := s.accessTokenManager.Make(&user.ID, time.Minute*15)
 	if err != nil {
-		return nil, fmt.Errorf("error generating token")
+		return nil, err
 	}
 
 	return &domain.TokenPair{
@@ -121,17 +125,17 @@ func (s *service) Refresh(ctx context.Context, token string) (*domain.TokenPair,
 
 func (s *service) Logout(ctx context.Context, token string) error {
 	if token == "" {
-		return errors.ErrInvalidToken
+		return domain.ErrTokenInvalid
 	}
 
 	_, err := s.tokenRepo.GetTokenByTokenString(ctx, token)
 	if err != nil {
-		return errors.ErrInvalidToken
+		return domain.ErrTokenInvalid
 	}
 
 	err = s.tokenRepo.RevokeToken(ctx, token)
 	if err != nil {
-		return fmt.Errorf("error revoking token")
+		return err
 	}
 
 	return nil

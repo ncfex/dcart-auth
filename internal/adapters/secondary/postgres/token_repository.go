@@ -13,10 +13,6 @@ import (
 )
 
 var (
-	ErrTokenNotFound   = errors.New("token not found")
-	ErrTokenExpired    = errors.New("token expired")
-	ErrTokenRevoked    = errors.New("token revoked")
-	ErrInvalidToken    = errors.New("invalid token")
 	ErrStoringToken    = errors.New("error storing token")
 	ErrValidatingToken = errors.New("error validating token")
 )
@@ -52,7 +48,7 @@ func (r *tokenRepository) GetTokenByTokenString(ctx context.Context, token strin
 	refreshToken, err := r.queries.GetTokenByTokenString(ctx, token)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, ErrTokenNotFound
+			return nil, domain.ErrTokenNotFound
 		}
 		return nil, err
 	}
@@ -64,7 +60,7 @@ func (r *tokenRepository) GetUserFromToken(ctx context.Context, token string) (*
 	user, err := r.queries.GetUserFromRefreshToken(ctx, token)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, ErrTokenNotFound
+			return nil, domain.ErrTokenNotFound
 		}
 		return nil, errors.Join(ErrValidatingToken, err)
 	}
@@ -76,7 +72,7 @@ func (r *tokenRepository) RevokeToken(ctx context.Context, token string) error {
 	_, err := r.queries.RevokeRefreshToken(ctx, token)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return ErrTokenNotFound
+			return domain.ErrTokenNotFound
 		}
 		return err
 	}

@@ -2,10 +2,21 @@ package domain
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
 	database "github.com/ncfex/dcart-auth/internal/infrastructure/database/sqlc"
+)
+
+var (
+	ErrTokenNotFound      = errors.New("token not found")
+	ErrTokenExpired       = errors.New("token expired")
+	ErrTokenRevoked       = errors.New("token revoked")
+	ErrTokenInvalid       = errors.New("token invalid")
+	ErrTokenInvalidIssuer = errors.New("token invalid issuer")
+	ErrTokenInvalidClaims = errors.New("token invalid claims")
+	ErrTokenSigningFailed = errors.New("token signing failed")
 )
 
 type RefreshToken struct {

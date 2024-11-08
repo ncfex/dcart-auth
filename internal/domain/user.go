@@ -8,6 +8,12 @@ import (
 	database "github.com/ncfex/dcart-auth/internal/infrastructure/database/sqlc"
 )
 
+var (
+	ErrUserNotFound       = errors.New("user not found")
+	ErrUserAlreadyExists  = errors.New("user already exists")
+	ErrInvalidCredentials = errors.New("invalid username or password")
+)
+
 type User struct {
 	ID           uuid.UUID `json:"id"`
 	Username     string    `json:"username"`
@@ -39,9 +45,3 @@ func NewUserFromDB(dbUser *database.User) *User {
 	user.FromDB(dbUser)
 	return user
 }
-
-// validation errors
-var (
-	ErrInvalidCredentials = errors.New("invalid username or password")
-	ErrUserAlreadyExists  = errors.New("user already exists")
-)

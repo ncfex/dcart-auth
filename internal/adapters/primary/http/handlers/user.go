@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/request"
@@ -15,7 +14,7 @@ func (h *handler) profile(w http.ResponseWriter, r *http.Request) {
 
 	user, exists := request.GetUserFromContext(r.Context())
 	if !exists {
-		h.responder.RespondWithError(w, http.StatusNotFound, "no user found", errors.New("no user found"))
+		h.responder.RespondWithError(w, http.StatusNotFound, domain.ErrUserNotFound.Error(), domain.ErrUserNotFound)
 		return
 	}
 

@@ -1,19 +1,12 @@
 package token
 
 import (
-	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/ncfex/dcart-auth/internal/core/ports"
-)
-
-var (
-	ErrTokenExpired  = errors.New("token expired")
-	ErrInvalidToken  = errors.New("invalid token")
-	ErrInvalidIssuer = errors.New("invalid issuer")
-	ErrInvalidUserID = errors.New("invalid user ID")
+	"github.com/ncfex/dcart-auth/internal/domain"
 )
 
 type service struct {
@@ -37,7 +30,11 @@ func (s *service) Make(userID *uuid.UUID, expiresIn time.Duration) (string, erro
 		Subject:   userID.String(),
 	}
 
-	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(s.tokenSecret))
+	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(s.tokenSecret))
+	if err != nil {
+		return "", domain.ErrTokenSigningFailed
+	}
+	return token, nil
 }
 
 func (s *service) Validate(tokenString string) (*uuid.UUID, error) {
@@ -48,26 +45,26 @@ func (s *service) Validate(tokenString string) (*uuid.UUID, error) {
 		func(t *jwt.Token) (interface{}, error) { return []byte(s.tokenSecret), nil },
 	)
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrTokenInvalid
 	}
 
 	userIDString, err := token.Claims.GetSubject()
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrTokenInvalidClaims
 	}
 
 	issuer, err := token.Claims.GetIssuer()
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrTokenInvalidClaims
 	}
 
 	if issuer != string(s.issuer) {
-		return nil, ErrInvalidIssuer
+		return nil, domain.ErrTokenInvalidIssuer
 	}
 
 	userID, err := uuid.Parse(userIDString)
 	if err != nil {
-		return nil, ErrInvalidUserID
+		return nil, domain.ErrTokenInvalidClaims
 	}
 	return &userID, nil
 }

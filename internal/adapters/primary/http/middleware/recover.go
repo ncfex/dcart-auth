@@ -8,8 +8,9 @@ import (
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/response"
 )
 
-var ErrInternalServerErrorStr = "internal server error"
-var ErrInternalServerError = errors.New(ErrInternalServerErrorStr)
+var (
+	ErrInternalServerError = errors.New("internal server error")
+)
 
 func Recovery(responder response.Responder, logger *log.Logger) Middleware {
 	return func(next http.Handler) http.Handler {
@@ -20,7 +21,7 @@ func Recovery(responder response.Responder, logger *log.Logger) Middleware {
 					responder.RespondWithError(
 						w,
 						http.StatusInternalServerError,
-						ErrInternalServerErrorStr,
+						ErrInternalServerError.Error(),
 						ErrInternalServerError,
 					)
 				}

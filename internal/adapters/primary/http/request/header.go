@@ -6,8 +6,10 @@ import (
 	"strings"
 )
 
-var ErrNoAuthHeaderIncluded = errors.New("no auth header included in request")
-var ErrMalformedAuthHeader = errors.New("malformed authorization header")
+var (
+	ErrNoAuthHeaderIncluded = errors.New("no auth header included in request")
+	ErrMalformedAuthHeader  = errors.New("malformed authorization header")
+)
 
 const BearerSchema = "Bearer"
 

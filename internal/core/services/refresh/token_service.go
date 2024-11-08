@@ -3,7 +3,12 @@ package refresh
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"fmt"
+)
+
+var (
+	ErrTokenGenerationFailed = errors.New("token generation failed")
 )
 
 type HexTokenService interface {
@@ -26,7 +31,9 @@ func (s *service) Make() (string, error) {
 	token := make([]byte, s.tokenLength)
 	_, err := rand.Read(token)
 	if err != nil {
-		return "", err
+		return "", ErrTokenGenerationFailed
 	}
-	return fmt.Sprintf("%s%s", s.prefix, hex.EncodeToString(token)), nil
+
+	tokenString := fmt.Sprintf("%s%s", s.prefix, hex.EncodeToString(token))
+	return tokenString, nil
 }
