@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	database "github.com/ncfex/dcart-auth/internal/infrastructure/database/sqlc"
+	database "github.com/ncfex/dcart-auth/internal/infrastructure/database/postgres/sqlc"
 )
 
 var (

@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/ncfex/dcart-auth/internal/core/domain"
-	"github.com/ncfex/dcart-auth/internal/core/ports"
 	"github.com/ncfex/dcart-auth/internal/infrastructure/database/postgres"
-	database "github.com/ncfex/dcart-auth/internal/infrastructure/database/sqlc"
+	database "github.com/ncfex/dcart-auth/internal/infrastructure/database/postgres/sqlc"
+	"github.com/ncfex/dcart-auth/internal/ports"
 )
 
 var (
