@@ -53,7 +53,7 @@ func (r *tokenRepository) GetTokenByTokenString(ctx context.Context, token strin
 		return nil, err
 	}
 
-	return domain.NewRefreshTokenFromDB(&refreshToken), nil
+	return postgres.ToRefreshTokenDomain(&refreshToken), nil
 }
 
 func (r *tokenRepository) GetUserFromToken(ctx context.Context, token string) (*domain.User, error) {
@@ -65,7 +65,7 @@ func (r *tokenRepository) GetUserFromToken(ctx context.Context, token string) (*
 		return nil, errors.Join(ErrValidatingToken, err)
 	}
 
-	return domain.NewUserFromDB(&user), nil
+	return postgres.ToUserDomain(&user), nil
 }
 
 func (r *tokenRepository) RevokeToken(ctx context.Context, token string) error {

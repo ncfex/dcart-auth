@@ -35,7 +35,8 @@ func (r *userRepository) CreateUser(ctx context.Context, user *domain.User) (*do
 		}
 		return nil, err
 	}
-	return domain.NewUserFromDB(&dbUser), nil
+
+	return postgres.ToUserDomain(&dbUser), nil
 }
 
 func (r *userRepository) GetUserByID(ctx context.Context, userID *uuid.UUID) (*domain.User, error) {
@@ -46,7 +47,7 @@ func (r *userRepository) GetUserByID(ctx context.Context, userID *uuid.UUID) (*d
 		}
 		return nil, err
 	}
-	return domain.NewUserFromDB(&dbUser), nil
+	return postgres.ToUserDomain(&dbUser), nil
 }
 
 func (r *userRepository) GetUserByUsername(ctx context.Context, username string) (*domain.User, error) {
@@ -57,5 +58,5 @@ func (r *userRepository) GetUserByUsername(ctx context.Context, username string)
 		}
 		return nil, err
 	}
-	return domain.NewUserFromDB(&dbUser), nil
+	return postgres.ToUserDomain(&dbUser), nil
 }
