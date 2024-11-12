@@ -8,8 +8,8 @@ import (
 
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/request"
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/response"
+	"github.com/ncfex/dcart-auth/internal/core/domain"
 	"github.com/ncfex/dcart-auth/internal/core/ports"
-	"github.com/ncfex/dcart-auth/internal/domain"
 )
 
 func RequireJWTAuth(

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ncfex/dcart-auth/internal/core/domain"
 	"github.com/ncfex/dcart-auth/internal/core/ports"
 	"github.com/ncfex/dcart-auth/internal/core/services/refresh"
-	"github.com/ncfex/dcart-auth/internal/domain"
 )
 
 type service struct {

@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/request"
-	"github.com/ncfex/dcart-auth/internal/domain"
+	"github.com/ncfex/dcart-auth/internal/core/domain"
 )
 
 func (h *handler) register(w http.ResponseWriter, r *http.Request) {

@@ -5,8 +5,8 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/ncfex/dcart-auth/internal/core/domain"
 	"github.com/ncfex/dcart-auth/internal/core/ports"
-	"github.com/ncfex/dcart-auth/internal/domain"
 )
 
 type service struct {

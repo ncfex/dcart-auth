@@ -3,7 +3,7 @@ package request
 import (
 	"context"
 
-	"github.com/ncfex/dcart-auth/internal/domain"
+	"github.com/ncfex/dcart-auth/internal/core/domain"
 )
 
 func SetValueToContext(ctx context.Context, key domain.ContextKey, value interface{}) context.Context {

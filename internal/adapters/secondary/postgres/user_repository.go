@@ -6,8 +6,8 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"github.com/ncfex/dcart-auth/internal/core/domain"
 	"github.com/ncfex/dcart-auth/internal/core/ports"
-	"github.com/ncfex/dcart-auth/internal/domain"
 	"github.com/ncfex/dcart-auth/internal/infrastructure/database/postgres"
 	database "github.com/ncfex/dcart-auth/internal/infrastructure/database/sqlc"
 )
