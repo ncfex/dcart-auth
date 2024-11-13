@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/handlers"
-	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/response"
 	"github.com/ncfex/dcart-auth/internal/adapters/secondary/postgres"
 
 	"github.com/ncfex/dcart-auth/internal/application/services/authentication"
 	"github.com/ncfex/dcart-auth/internal/config"
 
+	"github.com/ncfex/dcart-auth/pkg/httputil/response"
 	"github.com/ncfex/dcart-auth/pkg/services/auth/credentials"
 	"github.com/ncfex/dcart-auth/pkg/services/auth/tokens/jwt"
 	"github.com/ncfex/dcart-auth/pkg/services/auth/tokens/refresh"

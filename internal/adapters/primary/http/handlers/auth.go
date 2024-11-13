@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/request"
 	userDomain "github.com/ncfex/dcart-auth/internal/core/domain/user"
+	"github.com/ncfex/dcart-auth/pkg/httputil/request"
 )
 
 func (h *handler) register(w http.ResponseWriter, r *http.Request) {

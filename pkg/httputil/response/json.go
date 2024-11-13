@@ -2,8 +2,13 @@ package response
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
+)
+
+var (
+	ErrUnknown = errors.New("unknown")
 )
 
 type ErrorResponse struct {
@@ -41,11 +46,9 @@ func (r *httpResponder) RespondWithJSON(w http.ResponseWriter, code int, payload
 	w.Header().Set("Content-Type", "application/json")
 	data, err := json.Marshal(payload)
 	if err != nil {
-		r.logger.Printf("error marshaling json: %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		r.RespondWithError(w, http.StatusInternalServerError, ErrUnknown.Error(), err)
 		return
 	}
-
 	w.WriteHeader(code)
 	w.Write(data)
 }

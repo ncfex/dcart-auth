@@ -5,9 +5,10 @@ import (
 	"net/http"
 
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/middleware"
-	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/response"
 	"github.com/ncfex/dcart-auth/internal/core/ports/inbound"
 	"github.com/ncfex/dcart-auth/internal/core/ports/outbound"
+
+	"github.com/ncfex/dcart-auth/pkg/httputil/response"
 )
 
 type handler struct {

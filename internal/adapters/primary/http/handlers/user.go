@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/request"
 	userDomain "github.com/ncfex/dcart-auth/internal/core/domain/user"
+	"github.com/ncfex/dcart-auth/pkg/httputil/request"
 )
 
 func (h *handler) profile(w http.ResponseWriter, r *http.Request) {
@@ -12,7 +12,7 @@ func (h *handler) profile(w http.ResponseWriter, r *http.Request) {
 		User userDomain.User `json:"user"`
 	}
 
-	user, exists := request.GetUserFromContext(r.Context())
+	user, exists := request.GetDataFromContext[userDomain.User](r.Context(), request.ContextUserKey)
 	if !exists {
 		h.responder.RespondWithError(w, http.StatusNotFound, userDomain.ErrUserNotFound.Error(), userDomain.ErrUserNotFound)
 		return
