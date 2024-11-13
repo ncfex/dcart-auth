@@ -2,11 +2,11 @@ version: "2"
 sql:
   - engine: "postgresql"
     queries: "internal/adapters/secondary/postgres/queries/"
-    schema: "internal/infrastructure/database/migrations/"
+    schema: "internal/adapters/secondary/postgres/migrations/"
     gen:
       go:
         package: "db"
-        out: "internal/infrastructure/database/postgres/sqlc"
+        out: "internal/adapters/secondary/postgres/db"
         emit_interface: true
         emit_json_tags: true
         json_tags_case_style: "snake"

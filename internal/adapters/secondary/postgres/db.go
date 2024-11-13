@@ -7,11 +7,11 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type Database struct {
+type database struct {
 	*sql.DB
 }
 
-func NewDatabase(dsn string) (*Database, error) {
+func NewDatabase(dsn string) (*database, error) {
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("error initializing database: %w", err)
@@ -21,5 +21,5 @@ func NewDatabase(dsn string) (*Database, error) {
 		return nil, fmt.Errorf("error connecting to database: %w", err)
 	}
 
-	return &Database{db}, nil
+	return &database{db}, nil
 }

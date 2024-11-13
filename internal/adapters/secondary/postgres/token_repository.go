@@ -7,11 +7,10 @@ import (
 
 	"time"
 
+	"github.com/ncfex/dcart-auth/internal/adapters/secondary/postgres/db"
 	tokenDomain "github.com/ncfex/dcart-auth/internal/core/domain/token"
 	userDomain "github.com/ncfex/dcart-auth/internal/core/domain/user"
 	"github.com/ncfex/dcart-auth/internal/core/ports/outbound"
-	"github.com/ncfex/dcart-auth/internal/infrastructure/database/postgres"
-	database "github.com/ncfex/dcart-auth/internal/infrastructure/database/postgres/sqlc"
 )
 
 var (
@@ -20,19 +19,19 @@ var (
 )
 
 type tokenRepository struct {
-	queries   *database.Queries
+	queries   *db.Queries
 	expiresIn time.Duration
 }
 
-func NewTokenRepository(db *postgres.Database, expiresIn time.Duration) outbound.TokenRepository {
+func NewTokenRepository(database *database, expiresIn time.Duration) outbound.TokenRepository {
 	return &tokenRepository{
-		queries:   database.New(db.DB),
+		queries:   db.New(database.DB),
 		expiresIn: expiresIn,
 	}
 }
 
 func (r *tokenRepository) StoreToken(ctx context.Context, user *userDomain.User, token string) error {
-	params := database.CreateRefreshTokenParams{
+	params := db.CreateRefreshTokenParams{
 		Token:     token,
 		UserID:    user.ID,
 		ExpiresAt: time.Now().Add(r.expiresIn),
@@ -55,7 +54,7 @@ func (r *tokenRepository) GetTokenByTokenString(ctx context.Context, tokenString
 		return nil, err
 	}
 
-	return postgres.ToRefreshTokenDomain(&refreshToken), nil
+	return db.ToRefreshTokenDomain(&refreshToken), nil
 }
 
 func (r *tokenRepository) GetUserFromToken(ctx context.Context, tokenString string) (*userDomain.User, error) {
@@ -67,7 +66,7 @@ func (r *tokenRepository) GetUserFromToken(ctx context.Context, tokenString stri
 		return nil, errors.Join(ErrValidatingToken, err)
 	}
 
-	return postgres.ToUserDomain(&user), nil
+	return db.ToUserDomain(&user), nil
 }
 
 func (r *tokenRepository) RevokeToken(ctx context.Context, tokenString string) error {

@@ -7,24 +7,23 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/ncfex/dcart-auth/internal/adapters/secondary/postgres/db"
 	userDomain "github.com/ncfex/dcart-auth/internal/core/domain/user"
 	"github.com/ncfex/dcart-auth/internal/core/ports/outbound"
-	"github.com/ncfex/dcart-auth/internal/infrastructure/database/postgres"
-	database "github.com/ncfex/dcart-auth/internal/infrastructure/database/postgres/sqlc"
 )
 
 type userRepository struct {
-	queries *database.Queries
+	queries *db.Queries
 }
 
-func NewUserRepository(db *postgres.Database) outbound.UserRepository {
+func NewUserRepository(database *database) outbound.UserRepository {
 	return &userRepository{
-		queries: database.New(db.DB),
+		queries: db.New(database.DB),
 	}
 }
 
 func (r *userRepository) CreateUser(ctx context.Context, userObj *userDomain.User) (*userDomain.User, error) {
-	params := database.CreateUserParams{
+	params := db.CreateUserParams{
 		Username:     userObj.Username,
 		PasswordHash: userObj.PasswordHash,
 	}
@@ -37,7 +36,7 @@ func (r *userRepository) CreateUser(ctx context.Context, userObj *userDomain.Use
 		return nil, err
 	}
 
-	return postgres.ToUserDomain(&dbUser), nil
+	return db.ToUserDomain(&dbUser), nil
 }
 
 func (r *userRepository) GetUserByID(ctx context.Context, userID *uuid.UUID) (*userDomain.User, error) {
@@ -48,7 +47,7 @@ func (r *userRepository) GetUserByID(ctx context.Context, userID *uuid.UUID) (*u
 		}
 		return nil, err
 	}
-	return postgres.ToUserDomain(&dbUser), nil
+	return db.ToUserDomain(&dbUser), nil
 }
 
 func (r *userRepository) GetUserByUsername(ctx context.Context, username string) (*userDomain.User, error) {
@@ -59,5 +58,5 @@ func (r *userRepository) GetUserByUsername(ctx context.Context, username string)
 		}
 		return nil, err
 	}
-	return postgres.ToUserDomain(&dbUser), nil
+	return db.ToUserDomain(&dbUser), nil
 }

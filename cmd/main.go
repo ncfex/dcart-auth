@@ -12,9 +12,7 @@ import (
 	"github.com/ncfex/dcart-auth/internal/adapters/secondary/postgres"
 
 	"github.com/ncfex/dcart-auth/internal/application/services/authentication"
-
-	"github.com/ncfex/dcart-auth/internal/infrastructure/config"
-	postgresDB "github.com/ncfex/dcart-auth/internal/infrastructure/database/postgres"
+	"github.com/ncfex/dcart-auth/internal/config"
 
 	"github.com/ncfex/dcart-auth/pkg/services/auth/credentials"
 	"github.com/ncfex/dcart-auth/pkg/services/auth/tokens/jwt"
@@ -36,7 +34,7 @@ func main() {
 		cfg.PostgresDB,
 	)
 
-	db, err := postgresDB.NewDatabase(postgresURL)
+	db, err := postgres.NewDatabase(postgresURL)
 	if err != nil {
 		log.Fatal(err)
 	}

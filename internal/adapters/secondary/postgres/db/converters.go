@@ -1,4 +1,4 @@
-package postgres
+package db
 
 import (
 	"database/sql"
@@ -6,10 +6,9 @@ import (
 
 	tokenDomain "github.com/ncfex/dcart-auth/internal/core/domain/token"
 	userDomain "github.com/ncfex/dcart-auth/internal/core/domain/user"
-	db "github.com/ncfex/dcart-auth/internal/infrastructure/database/postgres/sqlc"
 )
 
-func ToUserDomain(dbUser *db.User) *userDomain.User {
+func ToUserDomain(dbUser *User) *userDomain.User {
 	return &userDomain.User{
 		ID:           dbUser.ID,
 		Username:     dbUser.Username,
@@ -19,8 +18,8 @@ func ToUserDomain(dbUser *db.User) *userDomain.User {
 	}
 }
 
-func ToUserDB(domainUser *userDomain.User) *db.User {
-	return &db.User{
+func ToUserDB(domainUser *userDomain.User) *User {
+	return &User{
 		ID:           domainUser.ID,
 		Username:     domainUser.Username,
 		PasswordHash: domainUser.PasswordHash,
@@ -29,7 +28,7 @@ func ToUserDB(domainUser *userDomain.User) *db.User {
 	}
 }
 
-func ToRefreshTokenDomain(dbToken *db.RefreshToken) *tokenDomain.RefreshToken {
+func ToRefreshTokenDomain(dbToken *RefreshToken) *tokenDomain.RefreshToken {
 	var revokedAt *time.Time
 	if dbToken.RevokedAt.Valid {
 		revokedAt = &dbToken.RevokedAt.Time
@@ -45,7 +44,7 @@ func ToRefreshTokenDomain(dbToken *db.RefreshToken) *tokenDomain.RefreshToken {
 	}
 }
 
-func ToRefreshTokenDB(domainToken *tokenDomain.RefreshToken) *db.RefreshToken {
+func ToRefreshTokenDB(domainToken *tokenDomain.RefreshToken) *RefreshToken {
 	var revokedAt sql.NullTime
 	if domainToken.RevokedAt != nil {
 		revokedAt = sql.NullTime{
@@ -54,7 +53,7 @@ func ToRefreshTokenDB(domainToken *tokenDomain.RefreshToken) *db.RefreshToken {
 		}
 	}
 
-	return &db.RefreshToken{
+	return &RefreshToken{
 		Token:     domainToken.Token,
 		CreatedAt: domainToken.CreatedAt,
 		UpdatedAt: domainToken.UpdatedAt,
