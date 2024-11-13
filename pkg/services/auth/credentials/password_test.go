@@ -1,9 +1,9 @@
-package password_test
+package credentials_test
 
 import (
 	"testing"
 
-	"github.com/ncfex/dcart-auth/internal/core/services/password"
+	"github.com/ncfex/dcart-auth/pkg/services/auth/credentials"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -33,7 +33,7 @@ func TestNewPasswordService(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			service := password.NewPasswordService(tt.cost)
+			service := credentials.NewPasswordService(tt.cost)
 			assert.NotNil(t, service)
 
 			hash, err := service.Hash("testpassword")
@@ -87,7 +87,7 @@ func TestPasswordService_HashPassword(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			service := password.NewPasswordService(tt.cost)
+			service := credentials.NewPasswordService(tt.cost)
 			hash, err := service.Hash(tt.password)
 
 			if tt.shouldError {
@@ -105,7 +105,7 @@ func TestPasswordService_HashPassword(t *testing.T) {
 }
 
 func TestPasswordService_CheckPasswordHash(t *testing.T) {
-	service := password.NewPasswordService(0)
+	service := credentials.NewPasswordService(0)
 	validPassword := "password123"
 	hash, _ := service.Hash(validPassword)
 

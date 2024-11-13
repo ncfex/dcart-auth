@@ -1,12 +1,18 @@
-package token
+package jwt
 
 import (
+	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/ncfex/dcart-auth/internal/core/domain"
-	"github.com/ncfex/dcart-auth/internal/ports"
+)
+
+var (
+	ErrTokenSigningFailed = errors.New("token signing failed")
+	ErrTokenInvalid       = errors.New("token invalid")
+	ErrTokenInvalidClaims = errors.New("token invalid claims")
+	ErrTokenInvalidIssuer = errors.New("token invalid issuer")
 )
 
 type service struct {
@@ -14,7 +20,7 @@ type service struct {
 	tokenSecret string
 }
 
-func NewJWTService(issuer, tokenSecret string) ports.TokenManager {
+func NewJWTService(issuer, tokenSecret string) *service {
 	return &service{
 		issuer:      issuer,
 		tokenSecret: tokenSecret,
@@ -32,7 +38,7 @@ func (s *service) Make(userID *uuid.UUID, expiresIn time.Duration) (string, erro
 
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(s.tokenSecret))
 	if err != nil {
-		return "", domain.ErrTokenSigningFailed
+		return "", ErrTokenSigningFailed
 	}
 	return token, nil
 }
@@ -45,26 +51,26 @@ func (s *service) Validate(tokenString string) (*uuid.UUID, error) {
 		func(t *jwt.Token) (interface{}, error) { return []byte(s.tokenSecret), nil },
 	)
 	if err != nil {
-		return nil, domain.ErrTokenInvalid
+		return nil, ErrTokenInvalid
 	}
 
 	userIDString, err := token.Claims.GetSubject()
 	if err != nil {
-		return nil, domain.ErrTokenInvalidClaims
+		return nil, ErrTokenInvalidClaims
 	}
 
 	issuer, err := token.Claims.GetIssuer()
 	if err != nil {
-		return nil, domain.ErrTokenInvalidClaims
+		return nil, ErrTokenInvalidClaims
 	}
 
 	if issuer != string(s.issuer) {
-		return nil, domain.ErrTokenInvalidIssuer
+		return nil, ErrTokenInvalidIssuer
 	}
 
 	userID, err := uuid.Parse(userIDString)
 	if err != nil {
-		return nil, domain.ErrTokenInvalidClaims
+		return nil, ErrTokenInvalidClaims
 	}
 	return &userID, nil
 }

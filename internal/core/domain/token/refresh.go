@@ -1,4 +1,4 @@
-package domain
+package token
 
 import (
 	"errors"
@@ -16,6 +16,13 @@ var (
 	ErrTokenInvalidClaims = errors.New("token invalid claims")
 	ErrTokenSigningFailed = errors.New("token signing failed")
 )
+
+type Token string
+
+type TokenPair struct {
+	AccessToken  Token `json:"access_token"`
+	RefreshToken Token `json:"refresh_token"`
+}
 
 type RefreshToken struct {
 	Token     string     `json:"token"`

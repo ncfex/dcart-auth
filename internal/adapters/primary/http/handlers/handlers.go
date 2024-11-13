@@ -6,25 +6,26 @@ import (
 
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/middleware"
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/response"
-	"github.com/ncfex/dcart-auth/internal/ports"
+	"github.com/ncfex/dcart-auth/internal/core/ports/inbound"
+	"github.com/ncfex/dcart-auth/internal/core/ports/outbound"
 )
 
 type handler struct {
 	logger            *log.Logger
 	responder         response.Responder
-	userAuthenticator ports.UserAuthenticator
-	tokenManager      ports.TokenManager
-	tokenRepo         ports.TokenRepository
-	userRepo          ports.UserRepository
+	userAuthenticator inbound.UserAuthenticator
+	tokenManager      inbound.TokenManager
+	tokenRepo         outbound.TokenRepository
+	userRepo          outbound.UserRepository
 }
 
 func NewHandler(
 	logger *log.Logger,
 	responder response.Responder,
-	userAuthenticator ports.UserAuthenticator,
-	tokenManager ports.TokenManager,
-	tokenRepo ports.TokenRepository,
-	userRepo ports.UserRepository,
+	userAuthenticator inbound.UserAuthenticator,
+	tokenManager inbound.TokenManager,
+	tokenRepo outbound.TokenRepository,
+	userRepo outbound.UserRepository,
 ) *handler {
 	return &handler{
 		logger:            logger,

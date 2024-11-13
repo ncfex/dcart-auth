@@ -10,12 +10,15 @@ import (
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/handlers"
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/response"
 	"github.com/ncfex/dcart-auth/internal/adapters/secondary/postgres"
-	"github.com/ncfex/dcart-auth/internal/core/services/authentication"
-	"github.com/ncfex/dcart-auth/internal/core/services/password"
-	"github.com/ncfex/dcart-auth/internal/core/services/refresh"
-	"github.com/ncfex/dcart-auth/internal/core/services/token"
+
+	"github.com/ncfex/dcart-auth/internal/application/services/authentication"
+
 	"github.com/ncfex/dcart-auth/internal/infrastructure/config"
 	postgresDB "github.com/ncfex/dcart-auth/internal/infrastructure/database/postgres"
+
+	"github.com/ncfex/dcart-auth/pkg/services/auth/credentials"
+	"github.com/ncfex/dcart-auth/pkg/services/auth/tokens/jwt"
+	"github.com/ncfex/dcart-auth/pkg/services/auth/tokens/refresh"
 )
 
 func main() {
@@ -46,8 +49,8 @@ func main() {
 		log.Fatalf("Failed to initialize token repository: %v", err)
 	}
 
-	passwordService := password.NewPasswordService(0)
-	jwtService := token.NewJWTService("dcart", cfg.JwtSecret)
+	passwordService := credentials.NewPasswordService(0)
+	jwtService := jwt.NewJWTService("dcart", cfg.JwtSecret)
 	hexTokenService := refresh.NewHexTokenService("dc_", 32)
 	authService := authentication.NewAuthService(
 		userRepo,

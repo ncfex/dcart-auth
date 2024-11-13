@@ -4,12 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+
 	"time"
 
-	"github.com/ncfex/dcart-auth/internal/core/domain"
+	tokenDomain "github.com/ncfex/dcart-auth/internal/core/domain/token"
+	userDomain "github.com/ncfex/dcart-auth/internal/core/domain/user"
+	"github.com/ncfex/dcart-auth/internal/core/ports/outbound"
 	"github.com/ncfex/dcart-auth/internal/infrastructure/database/postgres"
 	database "github.com/ncfex/dcart-auth/internal/infrastructure/database/postgres/sqlc"
-	"github.com/ncfex/dcart-auth/internal/ports"
 )
 
 var (
@@ -22,14 +24,14 @@ type tokenRepository struct {
 	expiresIn time.Duration
 }
 
-func NewTokenRepository(db *postgres.Database, expiresIn time.Duration) ports.TokenRepository {
+func NewTokenRepository(db *postgres.Database, expiresIn time.Duration) outbound.TokenRepository {
 	return &tokenRepository{
 		queries:   database.New(db.DB),
 		expiresIn: expiresIn,
 	}
 }
 
-func (r *tokenRepository) StoreToken(ctx context.Context, user *domain.User, token string) error {
+func (r *tokenRepository) StoreToken(ctx context.Context, user *userDomain.User, token string) error {
 	params := database.CreateRefreshTokenParams{
 		Token:     token,
 		UserID:    user.ID,
@@ -44,11 +46,11 @@ func (r *tokenRepository) StoreToken(ctx context.Context, user *domain.User, tok
 	return nil
 }
 
-func (r *tokenRepository) GetTokenByTokenString(ctx context.Context, token string) (*domain.RefreshToken, error) {
-	refreshToken, err := r.queries.GetTokenByTokenString(ctx, token)
+func (r *tokenRepository) GetTokenByTokenString(ctx context.Context, tokenString string) (*tokenDomain.RefreshToken, error) {
+	refreshToken, err := r.queries.GetTokenByTokenString(ctx, tokenString)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, domain.ErrTokenNotFound
+			return nil, tokenDomain.ErrTokenNotFound
 		}
 		return nil, err
 	}
@@ -56,11 +58,11 @@ func (r *tokenRepository) GetTokenByTokenString(ctx context.Context, token strin
 	return postgres.ToRefreshTokenDomain(&refreshToken), nil
 }
 
-func (r *tokenRepository) GetUserFromToken(ctx context.Context, token string) (*domain.User, error) {
-	user, err := r.queries.GetUserFromRefreshToken(ctx, token)
+func (r *tokenRepository) GetUserFromToken(ctx context.Context, tokenString string) (*userDomain.User, error) {
+	user, err := r.queries.GetUserFromRefreshToken(ctx, tokenString)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, domain.ErrTokenNotFound
+			return nil, tokenDomain.ErrTokenNotFound
 		}
 		return nil, errors.Join(ErrValidatingToken, err)
 	}
@@ -68,11 +70,11 @@ func (r *tokenRepository) GetUserFromToken(ctx context.Context, token string) (*
 	return postgres.ToUserDomain(&user), nil
 }
 
-func (r *tokenRepository) RevokeToken(ctx context.Context, token string) error {
-	_, err := r.queries.RevokeRefreshToken(ctx, token)
+func (r *tokenRepository) RevokeToken(ctx context.Context, tokenString string) error {
+	_, err := r.queries.RevokeRefreshToken(ctx, tokenString)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return domain.ErrTokenNotFound
+			return tokenDomain.ErrTokenNotFound
 		}
 		return err
 	}

@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/request"
-	"github.com/ncfex/dcart-auth/internal/core/domain"
+	userDomain "github.com/ncfex/dcart-auth/internal/core/domain/user"
 )
 
 func (h *handler) register(w http.ResponseWriter, r *http.Request) {
@@ -14,7 +14,7 @@ func (h *handler) register(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 	type response struct {
-		domain.User
+		userDomain.User
 	}
 
 	params := parameters{}
@@ -30,7 +30,7 @@ func (h *handler) register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.responder.RespondWithJSON(w, http.StatusCreated, response{
-		User: domain.User{
+		User: userDomain.User{
 			ID:           createdUser.ID,
 			Username:     createdUser.Username,
 			PasswordHash: createdUser.PasswordHash,

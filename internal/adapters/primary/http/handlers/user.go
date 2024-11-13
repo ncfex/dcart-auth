@@ -4,22 +4,22 @@ import (
 	"net/http"
 
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/request"
-	"github.com/ncfex/dcart-auth/internal/core/domain"
+	userDomain "github.com/ncfex/dcart-auth/internal/core/domain/user"
 )
 
 func (h *handler) profile(w http.ResponseWriter, r *http.Request) {
 	type response struct {
-		User domain.User `json:"user"`
+		User userDomain.User `json:"user"`
 	}
 
 	user, exists := request.GetUserFromContext(r.Context())
 	if !exists {
-		h.responder.RespondWithError(w, http.StatusNotFound, domain.ErrUserNotFound.Error(), domain.ErrUserNotFound)
+		h.responder.RespondWithError(w, http.StatusNotFound, userDomain.ErrUserNotFound.Error(), userDomain.ErrUserNotFound)
 		return
 	}
 
 	h.responder.RespondWithJSON(w, http.StatusOK, response{
-		User: domain.User{
+		User: userDomain.User{
 			ID:        user.ID,
 			Username:  user.Username,
 			CreatedAt: user.CreatedAt,

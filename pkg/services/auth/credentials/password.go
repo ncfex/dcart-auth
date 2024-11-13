@@ -1,9 +1,8 @@
-package password
+package credentials
 
 import (
 	"errors"
 
-	"github.com/ncfex/dcart-auth/internal/ports"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -17,7 +16,7 @@ type service struct {
 	cost int
 }
 
-func NewPasswordService(cost int) ports.PasswordEncrypter {
+func NewPasswordService(cost int) *service {
 	if cost == 0 {
 		cost = bcrypt.DefaultCost
 	}

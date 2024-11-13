@@ -9,13 +9,14 @@ import (
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/request"
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/response"
 	"github.com/ncfex/dcart-auth/internal/core/domain"
-	"github.com/ncfex/dcart-auth/internal/ports"
+	"github.com/ncfex/dcart-auth/internal/core/ports/inbound"
+	"github.com/ncfex/dcart-auth/internal/core/ports/outbound"
 )
 
 func RequireJWTAuth(
-	tokenManager ports.TokenManager,
-	tokenRepo ports.TokenRepository,
-	userRepo ports.UserRepository,
+	tokenManager inbound.TokenManager,
+	tokenRepo outbound.TokenRepository,
+	userRepo outbound.UserRepository,
 	responder response.Responder,
 ) Middleware {
 	return func(next http.Handler) http.Handler {
@@ -53,9 +54,9 @@ func RequireJWTAuth(
 }
 
 func RequireRefreshToken(
-	tokenManager ports.TokenManager,
-	tokenRepo ports.TokenRepository,
-	userRepo ports.UserRepository,
+	tokenManager inbound.TokenManager,
+	tokenRepo outbound.TokenRepository,
+	userRepo outbound.UserRepository,
 	responder response.Responder,
 ) Middleware {
 	return func(next http.Handler) http.Handler {

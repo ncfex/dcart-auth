@@ -5,26 +5,28 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ncfex/dcart-auth/internal/core/domain"
-	"github.com/ncfex/dcart-auth/internal/core/services/refresh"
-	"github.com/ncfex/dcart-auth/internal/ports"
+	tokenDomain "github.com/ncfex/dcart-auth/internal/core/domain/token"
+	userDomain "github.com/ncfex/dcart-auth/internal/core/domain/user"
+	"github.com/ncfex/dcart-auth/internal/core/ports/inbound"
+	"github.com/ncfex/dcart-auth/internal/core/ports/outbound"
+	"github.com/ncfex/dcart-auth/pkg/services/auth/tokens/refresh"
 )
 
 type service struct {
-	userRepo            ports.UserRepository
-	tokenRepo           ports.TokenRepository
-	passwordEncrypter   ports.PasswordEncrypter
-	accessTokenManager  ports.TokenManager
+	userRepo            outbound.UserRepository
+	tokenRepo           outbound.TokenRepository
+	passwordEncrypter   inbound.PasswordEncrypter
+	accessTokenManager  inbound.TokenManager
 	refreshTokenManager refresh.HexTokenService
 }
 
 func NewAuthService(
-	userRepo ports.UserRepository,
-	tokenRepo ports.TokenRepository,
-	passwordEncrypter ports.PasswordEncrypter,
-	accessTokenManager ports.TokenManager,
+	userRepo outbound.UserRepository,
+	tokenRepo outbound.TokenRepository,
+	passwordEncrypter inbound.PasswordEncrypter,
+	accessTokenManager inbound.TokenManager,
 	refreshTokenManager refresh.HexTokenService,
-) ports.UserAuthenticator {
+) inbound.UserAuthenticator {
 	return &service{
 		userRepo:            userRepo,
 		tokenRepo:           tokenRepo,
@@ -34,16 +36,16 @@ func NewAuthService(
 	}
 }
 
-func (s *service) Register(ctx context.Context, username, password string) (*domain.User, error) {
+func (s *service) Register(ctx context.Context, username, password string) (*userDomain.User, error) {
 	if username == "" || password == "" {
-		return nil, domain.ErrInvalidCredentials
+		return nil, userDomain.ErrInvalidCredentials
 	}
 
 	_, err := s.userRepo.GetUserByUsername(ctx, username)
 	if err == nil {
-		return nil, domain.ErrUserAlreadyExists
+		return nil, userDomain.ErrUserAlreadyExists
 	}
-	if err != domain.ErrUserNotFound {
+	if err != userDomain.ErrUserNotFound {
 		return nil, err
 	}
 
@@ -52,26 +54,26 @@ func (s *service) Register(ctx context.Context, username, password string) (*dom
 		return nil, err
 	}
 
-	user := &domain.User{
+	newUser := &userDomain.User{
 		Username:     username,
 		PasswordHash: hashedPassword,
 	}
 
-	return s.userRepo.CreateUser(ctx, user)
+	return s.userRepo.CreateUser(ctx, newUser)
 }
 
-func (s *service) Login(ctx context.Context, username, password string) (*domain.TokenPair, error) {
+func (s *service) Login(ctx context.Context, username, password string) (*tokenDomain.TokenPair, error) {
 	if username == "" || password == "" {
-		return nil, domain.ErrInvalidCredentials
+		return nil, userDomain.ErrInvalidCredentials
 	}
 	user, err := s.userRepo.GetUserByUsername(ctx, username)
 	if err != nil {
-		return nil, domain.ErrInvalidCredentials
+		return nil, userDomain.ErrInvalidCredentials
 	}
 
 	err = s.passwordEncrypter.Compare(user.PasswordHash, password)
 	if err != nil {
-		return nil, domain.ErrInvalidCredentials
+		return nil, userDomain.ErrInvalidCredentials
 	}
 
 	accessToken, err := s.accessTokenManager.Make(&user.ID, time.Minute*15)
@@ -89,20 +91,20 @@ func (s *service) Login(ctx context.Context, username, password string) (*domain
 		return nil, err
 	}
 
-	return &domain.TokenPair{
-		AccessToken:  domain.Token(accessToken),
-		RefreshToken: domain.Token(refreshToken),
+	return &tokenDomain.TokenPair{
+		AccessToken:  tokenDomain.Token(accessToken),
+		RefreshToken: tokenDomain.Token(refreshToken),
 	}, nil
 }
 
-func (s *service) Refresh(ctx context.Context, token string) (*domain.TokenPair, error) {
+func (s *service) Refresh(ctx context.Context, token string) (*tokenDomain.TokenPair, error) {
 	if token == "" {
-		return nil, domain.ErrTokenInvalid
+		return nil, tokenDomain.ErrTokenInvalid
 	}
 
 	ref, err := s.tokenRepo.GetTokenByTokenString(ctx, token)
 	if err != nil {
-		return nil, domain.ErrTokenInvalid
+		return nil, tokenDomain.ErrTokenInvalid
 	}
 
 	fmt.Println(ref)
@@ -117,20 +119,20 @@ func (s *service) Refresh(ctx context.Context, token string) (*domain.TokenPair,
 		return nil, err
 	}
 
-	return &domain.TokenPair{
-		AccessToken:  domain.Token(accessToken),
-		RefreshToken: domain.Token(token),
+	return &tokenDomain.TokenPair{
+		AccessToken:  tokenDomain.Token(accessToken),
+		RefreshToken: tokenDomain.Token(token),
 	}, nil
 }
 
 func (s *service) Logout(ctx context.Context, token string) error {
 	if token == "" {
-		return domain.ErrTokenInvalid
+		return tokenDomain.ErrTokenInvalid
 	}
 
 	_, err := s.tokenRepo.GetTokenByTokenString(ctx, token)
 	if err != nil {
-		return domain.ErrTokenInvalid
+		return tokenDomain.ErrTokenInvalid
 	}
 
 	err = s.tokenRepo.RevokeToken(ctx, token)

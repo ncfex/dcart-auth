@@ -1,17 +1,18 @@
-package ports
+package inbound
 
 import (
 	"context"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/ncfex/dcart-auth/internal/core/domain"
+	tokenDomain "github.com/ncfex/dcart-auth/internal/core/domain/token"
+	userDomain "github.com/ncfex/dcart-auth/internal/core/domain/user"
 )
 
 type UserAuthenticator interface {
-	Register(ctx context.Context, username string, password string) (*domain.User, error)
-	Login(ctx context.Context, username string, password string) (*domain.TokenPair, error)
-	Refresh(ctx context.Context, token string) (*domain.TokenPair, error)
+	Register(ctx context.Context, username string, password string) (*userDomain.User, error)
+	Login(ctx context.Context, username string, password string) (*tokenDomain.TokenPair, error)
+	Refresh(ctx context.Context, token string) (*tokenDomain.TokenPair, error)
 	Logout(ctx context.Context, token string) error
 }
 
