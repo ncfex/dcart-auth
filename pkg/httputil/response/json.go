@@ -11,7 +11,7 @@ var (
 	ErrUnknown = errors.New("unknown")
 )
 
-type ErrorResponse struct {
+type errorResponse struct {
 	Error string `json:"error"`
 }
 
@@ -37,7 +37,7 @@ func (r *httpResponder) RespondWithError(w http.ResponseWriter, code int, msg st
 	if code > 499 {
 		r.logger.Printf("Responding with 5XX error: %s", msg)
 	}
-	r.RespondWithJSON(w, code, ErrorResponse{
+	r.RespondWithJSON(w, code, errorResponse{
 		Error: msg,
 	})
 }

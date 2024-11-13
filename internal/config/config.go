@@ -6,7 +6,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-type Config struct {
+type config struct {
 	PostgresHost     string
 	PostgresPort     string
 	PostgresDB       string
@@ -18,12 +18,12 @@ type Config struct {
 	Port             string
 }
 
-func LoadConfig() (*Config, error) {
+func LoadConfig() (*config, error) {
 	err := godotenv.Load()
 	if err != nil {
-		return &Config{}, err
+		return &config{}, err
 	}
-	return &Config{
+	return &config{
 		PostgresHost:     getEnv("POSTGRES_HOST", "localhost"),
 		PostgresPort:     getEnv("POSTGRES_PORT", "5432"),
 		PostgresDB:       getEnv("POSTGRES_DB", "authdb"),
