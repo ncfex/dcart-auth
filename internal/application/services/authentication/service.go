@@ -9,30 +9,29 @@ import (
 	userDomain "github.com/ncfex/dcart-auth/internal/core/domain/user"
 	"github.com/ncfex/dcart-auth/internal/core/ports/inbound"
 	"github.com/ncfex/dcart-auth/internal/core/ports/outbound"
-	"github.com/ncfex/dcart-auth/pkg/services/auth/tokens/refresh"
 )
 
 type service struct {
-	userRepo            outbound.UserRepository
-	tokenRepo           outbound.TokenRepository
-	passwordEncrypter   inbound.PasswordEncrypter
-	accessTokenManager  inbound.TokenManager
-	refreshTokenManager refresh.HexTokenService
+	userRepo        outbound.UserRepository
+	tokenRepo       outbound.TokenRepository
+	passwordHasher  inbound.PasswordHasher
+	accessTokenGen  inbound.TokenGenerator
+	refreshTokenGen inbound.RefreshTokenGenerator
 }
 
 func NewAuthService(
 	userRepo outbound.UserRepository,
 	tokenRepo outbound.TokenRepository,
-	passwordEncrypter inbound.PasswordEncrypter,
-	accessTokenManager inbound.TokenManager,
-	refreshTokenManager refresh.HexTokenService,
-) inbound.UserAuthenticator {
+	passwordHasher inbound.PasswordHasher,
+	accessTokenGen inbound.TokenGenerator,
+	refreshTokenGen inbound.RefreshTokenGenerator,
+) *service {
 	return &service{
-		userRepo:            userRepo,
-		tokenRepo:           tokenRepo,
-		passwordEncrypter:   passwordEncrypter,
-		accessTokenManager:  accessTokenManager,
-		refreshTokenManager: refreshTokenManager,
+		userRepo:        userRepo,
+		tokenRepo:       tokenRepo,
+		passwordHasher:  passwordHasher,
+		accessTokenGen:  accessTokenGen,
+		refreshTokenGen: refreshTokenGen,
 	}
 }
 
@@ -49,7 +48,7 @@ func (s *service) Register(ctx context.Context, username, password string) (*use
 		return nil, err
 	}
 
-	hashedPassword, err := s.passwordEncrypter.Hash(password)
+	hashedPassword, err := s.passwordHasher.Hash(password)
 	if err != nil {
 		return nil, err
 	}
@@ -71,17 +70,17 @@ func (s *service) Login(ctx context.Context, username, password string) (*tokenD
 		return nil, userDomain.ErrInvalidCredentials
 	}
 
-	err = s.passwordEncrypter.Compare(user.PasswordHash, password)
+	err = s.passwordHasher.Compare(user.PasswordHash, password)
 	if err != nil {
 		return nil, userDomain.ErrInvalidCredentials
 	}
 
-	accessToken, err := s.accessTokenManager.Make(&user.ID, time.Minute*15)
+	accessToken, err := s.accessTokenGen.Generate(user.ID, time.Minute*15)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := s.refreshTokenManager.Make()
+	refreshToken, err := s.refreshTokenGen.Generate()
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +113,7 @@ func (s *service) Refresh(ctx context.Context, token string) (*tokenDomain.Token
 		return nil, err
 	}
 
-	accessToken, err := s.accessTokenManager.Make(&user.ID, time.Minute*15)
+	accessToken, err := s.accessTokenGen.Generate(user.ID, time.Minute*15)
 	if err != nil {
 		return nil, err
 	}

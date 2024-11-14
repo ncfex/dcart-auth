@@ -47,15 +47,15 @@ func main() {
 		log.Fatalf("Failed to initialize token repository: %v", err)
 	}
 
-	passwordService := credentials.NewPasswordService(0)
+	passwordHasher := credentials.NewBcryptHasher(0)
 	jwtService := jwt.NewJWTService("dcart", cfg.JwtSecret)
-	hexTokenService := refresh.NewHexTokenService("dc_", 32)
+	refreshTokenGenerator := refresh.NewHexRefreshGenerator("dc_", 32)
 	authService := authentication.NewAuthService(
 		userRepo,
 		tokenRepo,
-		passwordService,
+		passwordHasher,
 		jwtService,
-		hexTokenService,
+		refreshTokenGenerator,
 	)
 
 	logger := log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)

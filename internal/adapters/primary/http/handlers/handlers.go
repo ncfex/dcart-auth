@@ -12,29 +12,29 @@ import (
 )
 
 type handler struct {
-	logger            *log.Logger
-	responder         response.Responder
-	userAuthenticator inbound.UserAuthenticator
-	tokenManager      inbound.TokenManager
-	tokenRepo         outbound.TokenRepository
-	userRepo          outbound.UserRepository
+	logger                *log.Logger
+	responder             response.Responder
+	authenticationService inbound.AuthenticationService
+	tokenGenerator        inbound.TokenGenerator
+	tokenRepo             outbound.TokenRepository
+	userRepo              outbound.UserRepository
 }
 
 func NewHandler(
 	logger *log.Logger,
 	responder response.Responder,
-	userAuthenticator inbound.UserAuthenticator,
-	tokenManager inbound.TokenManager,
+	authenticationService inbound.AuthenticationService,
+	tokenGenerator inbound.TokenGenerator,
 	tokenRepo outbound.TokenRepository,
 	userRepo outbound.UserRepository,
 ) *handler {
 	return &handler{
-		logger:            logger,
-		userAuthenticator: userAuthenticator,
-		responder:         responder,
-		tokenManager:      tokenManager,
-		tokenRepo:         tokenRepo,
-		userRepo:          userRepo,
+		logger:                logger,
+		authenticationService: authenticationService,
+		responder:             responder,
+		tokenGenerator:        tokenGenerator,
+		tokenRepo:             tokenRepo,
+		userRepo:              userRepo,
 	}
 }
 
@@ -52,7 +52,6 @@ func (h *handler) Router() *http.ServeMux {
 
 	refreshTokenRequiredChain := middleware.Chain(
 		middleware.RequireRefreshToken(
-			h.tokenManager,
 			h.tokenRepo,
 			h.userRepo,
 			h.responder,
@@ -63,7 +62,7 @@ func (h *handler) Router() *http.ServeMux {
 
 	accessTokenProtectedChain := middleware.Chain(
 		middleware.RequireJWTAuth(
-			h.tokenManager,
+			h.tokenGenerator,
 			h.tokenRepo,
 			h.userRepo,
 			h.responder,

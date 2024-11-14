@@ -17,7 +17,7 @@ func (h *handler) refreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenPair, err := h.userAuthenticator.Refresh(r.Context(), refreshToken)
+	tokenPair, err := h.authenticationService.Refresh(r.Context(), refreshToken)
 	if err != nil {
 		h.responder.RespondWithError(w, http.StatusUnauthorized, "not authorized", err)
 		return
@@ -35,7 +35,7 @@ func (h *handler) validateToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, err := h.tokenManager.Validate(token)
+	userID, err := h.tokenGenerator.Validate(token)
 	if err != nil {
 		h.responder.RespondWithError(w, http.StatusUnauthorized, "invalid token", err)
 		return

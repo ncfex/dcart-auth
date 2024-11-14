@@ -23,7 +23,7 @@ func (h *handler) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createdUser, err := h.userAuthenticator.Register(r.Context(), params.Username, params.Password)
+	createdUser, err := h.authenticationService.Register(r.Context(), params.Username, params.Password)
 	if err != nil {
 		h.responder.RespondWithError(w, http.StatusBadRequest, err.Error(), err)
 		return
@@ -56,7 +56,7 @@ func (h *handler) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenPair, err := h.userAuthenticator.Login(r.Context(), params.Username, params.Password)
+	tokenPair, err := h.authenticationService.Login(r.Context(), params.Username, params.Password)
 	if err != nil {
 		h.responder.RespondWithError(w, http.StatusUnauthorized, err.Error(), err)
 		return
@@ -75,7 +75,7 @@ func (h *handler) logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.userAuthenticator.Logout(r.Context(), refreshToken)
+	err = h.authenticationService.Logout(r.Context(), refreshToken)
 	if err != nil {
 		h.responder.RespondWithError(w, http.StatusInternalServerError, err.Error(), err)
 		return
