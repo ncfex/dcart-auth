@@ -4,11 +4,11 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/middleware"
 	"github.com/ncfex/dcart-auth/internal/core/ports/inbound"
 	"github.com/ncfex/dcart-auth/internal/core/ports/outbound"
 
 	"github.com/ncfex/dcart-auth/pkg/httputil/response"
+	"github.com/ncfex/dcart-auth/pkg/middleware"
 )
 
 type handler struct {
@@ -51,7 +51,7 @@ func (h *handler) Router() *http.ServeMux {
 	)
 
 	refreshTokenRequiredChain := middleware.Chain(
-		middleware.RequireRefreshToken(
+		RequireRefreshToken(
 			h.tokenRepo,
 			h.userRepo,
 			h.responder,
@@ -61,7 +61,7 @@ func (h *handler) Router() *http.ServeMux {
 	)
 
 	accessTokenProtectedChain := middleware.Chain(
-		middleware.RequireJWTAuth(
+		RequireJWTAuth(
 			h.tokenGenerator,
 			h.tokenRepo,
 			h.userRepo,

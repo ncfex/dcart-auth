@@ -1,4 +1,4 @@
-package middleware
+package handlers
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 
 	"github.com/ncfex/dcart-auth/pkg/httputil/request"
 	"github.com/ncfex/dcart-auth/pkg/httputil/response"
+	"github.com/ncfex/dcart-auth/pkg/middleware"
 )
 
 func RequireJWTAuth(
@@ -18,7 +19,7 @@ func RequireJWTAuth(
 	tokenRepo outbound.TokenRepository,
 	userRepo outbound.UserRepository,
 	responder response.Responder,
-) Middleware {
+) middleware.Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx, cancel := context.WithTimeout(r.Context(), time.Second*5)
@@ -57,7 +58,7 @@ func RequireRefreshToken(
 	tokenRepo outbound.TokenRepository,
 	userRepo outbound.UserRepository,
 	responder response.Responder,
-) Middleware {
+) middleware.Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx, cancel := context.WithTimeout(r.Context(), time.Second*5)
