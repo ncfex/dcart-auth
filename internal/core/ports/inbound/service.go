@@ -22,8 +22,8 @@ type PasswordHasher interface {
 }
 
 type TokenGenerator interface {
-	Generate(userID *uuid.UUID, expiresIn time.Duration) (string, error)
-	Validate(token string) (*uuid.UUID, error)
+	Generate(userID uuid.UUID, expiresIn time.Duration) (string, error)
+	Validate(token string) (uuid.UUID, error)
 }
 
 type RefreshTokenGenerator interface {
