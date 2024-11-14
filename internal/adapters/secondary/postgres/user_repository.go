@@ -39,8 +39,8 @@ func (r *userRepository) CreateUser(ctx context.Context, userObj *userDomain.Use
 	return db.ToUserDomain(&dbUser), nil
 }
 
-func (r *userRepository) GetUserByID(ctx context.Context, userID *uuid.UUID) (*userDomain.User, error) {
-	dbUser, err := r.queries.GetUserByID(ctx, *userID)
+func (r *userRepository) GetUserByID(ctx context.Context, userID uuid.UUID) (*userDomain.User, error) {
+	dbUser, err := r.queries.GetUserByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, userDomain.ErrUserNotFound

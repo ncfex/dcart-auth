@@ -31,23 +31,23 @@ func NewTokenRepository(redisURL string) (*repository, error) {
 	return &repository{client: client}, nil
 }
 
-func (r *repository) StoreToken(ctx context.Context, userID *uuid.UUID, token string) error {
+func (r *repository) StoreToken(ctx context.Context, userID uuid.UUID, token string) error {
 	return r.client.Set(ctx, token, userID.String(), 24*time.Hour).Err()
 }
 
-func (r *repository) ValidateToken(ctx context.Context, token string) (*uuid.UUID, error) {
+func (r *repository) ValidateToken(ctx context.Context, token string) (uuid.UUID, error) {
 	userIDStr, err := r.client.Get(ctx, token).Result()
 	if err == redis.Nil {
-		return nil, nil // token not found
+		return uuid.Nil, fmt.Errorf("token not found")
 	}
 	if err != nil {
-		return nil, err
+		return uuid.Nil, err
 	}
 
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid UUID format: %v", err)
+		return uuid.Nil, fmt.Errorf("invalid UUID format: %v", err)
 	}
 
-	return &userID, nil
+	return userID, nil
 }
