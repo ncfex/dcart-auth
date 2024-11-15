@@ -141,3 +141,21 @@ func (s *service) Logout(ctx context.Context, token string) error {
 
 	return nil
 }
+
+func (s *service) Validate(ctx context.Context, token string) (*userDomain.User, error) {
+	if token == "" {
+		return nil, tokenDomain.ErrTokenInvalid
+	}
+
+	userID, err := s.accessTokenGen.Validate(token)
+	if err != nil {
+		return nil, tokenDomain.ErrTokenInvalid
+	}
+
+	user, err := s.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		return nil, userDomain.ErrUserNotFound
+	}
+
+	return user, nil
+}
