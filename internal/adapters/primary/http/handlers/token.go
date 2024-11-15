@@ -35,15 +35,9 @@ func (h *handler) validateToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, err := h.tokenGenerator.Validate(token)
+	user, err := h.authenticationService.Validate(r.Context(), token)
 	if err != nil {
-		h.responder.RespondWithError(w, http.StatusUnauthorized, "invalid token", err)
-		return
-	}
-
-	user, err := h.userRepo.GetUserByID(r.Context(), userID)
-	if err != nil {
-		h.responder.RespondWithError(w, http.StatusUnauthorized, "user not found", err)
+		h.responder.RespondWithError(w, http.StatusUnauthorized, "unauthorized", err)
 		return
 	}
 
