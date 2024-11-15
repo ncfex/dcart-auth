@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/middlewares"
 	"github.com/ncfex/dcart-auth/internal/core/ports/inbound"
 	"github.com/ncfex/dcart-auth/internal/core/ports/outbound"
 
@@ -38,8 +39,7 @@ func NewHandler(
 	}
 }
 
-// TODO - add use or addRoute function
-func (h *handler) Router() *http.ServeMux {
+func (h *handler) RegisterRoutes() *http.ServeMux {
 	mux := http.NewServeMux()
 
 	loggingMiddleware := middleware.Logging(h.logger)
@@ -51,7 +51,7 @@ func (h *handler) Router() *http.ServeMux {
 	)
 
 	refreshTokenRequiredChain := middleware.Chain(
-		RequireRefreshToken(
+		middlewares.RequireRefreshToken(
 			h.tokenRepo,
 			h.userRepo,
 			h.responder,
@@ -61,7 +61,7 @@ func (h *handler) Router() *http.ServeMux {
 	)
 
 	accessTokenProtectedChain := middleware.Chain(
-		RequireJWTAuth(
+		middlewares.RequireJWTAuth(
 			h.tokenGenerator,
 			h.tokenRepo,
 			h.userRepo,

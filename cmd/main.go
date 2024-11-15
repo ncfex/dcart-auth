@@ -43,9 +43,6 @@ func main() {
 	// repo
 	userRepo := postgres.NewUserRepository(db)
 	tokenRepo := postgres.NewTokenRepository(db, 24*7*time.Hour)
-	if err != nil {
-		log.Fatalf("Failed to initialize token repository: %v", err)
-	}
 
 	passwordHasher := credentials.NewBcryptHasher(0)
 	jwtService := jwt.NewJWTService("dcart", cfg.JwtSecret)
@@ -72,7 +69,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:    ":" + cfg.Port,
-		Handler: handler.Router(),
+		Handler: handler.RegisterRoutes(),
 	}
 
 	log.Printf("starting auth service on port %s", cfg.Port)
