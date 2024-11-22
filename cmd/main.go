@@ -9,8 +9,8 @@ import (
 
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/handlers"
 	"github.com/ncfex/dcart-auth/internal/adapters/secondary/postgres"
+	"github.com/ncfex/dcart-auth/internal/core/application/services"
 
-	"github.com/ncfex/dcart-auth/internal/application/services/authentication"
 	"github.com/ncfex/dcart-auth/internal/config"
 
 	"github.com/ncfex/dcart-auth/pkg/httputil/response"
@@ -47,7 +47,7 @@ func main() {
 	passwordHasher := credentials.NewBcryptHasher(0)
 	jwtService := jwt.NewJWTService("dcart", cfg.JwtSecret)
 	refreshTokenGenerator := refresh.NewHexRefreshGenerator("dc_", 32)
-	authService := authentication.NewAuthService(
+	authService := services.NewAuthService(
 		userRepo,
 		tokenRepo,
 		passwordHasher,
