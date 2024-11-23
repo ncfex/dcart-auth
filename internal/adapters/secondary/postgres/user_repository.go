@@ -12,6 +12,8 @@ import (
 	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
 
+// TODO USE DTO, DON'T USE DOMAIN MODEL DIRECTLY
+// TODO DONT USE DOMAIN ERRORS HERE
 type userRepository struct {
 	queries *db.Queries
 }

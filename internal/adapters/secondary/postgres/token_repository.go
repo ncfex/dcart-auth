@@ -18,6 +18,8 @@ var (
 	ErrValidatingToken = errors.New("error validating token")
 )
 
+// TODO USE DTO, DON'T USE DOMAIN MODEL DIRECTLY
+// TODO DONT USE DOMAIN ERRORS HERE
 type tokenRepository struct {
 	queries   *db.Queries
 	expiresIn time.Duration
