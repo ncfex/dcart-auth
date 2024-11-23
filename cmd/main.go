@@ -9,7 +9,7 @@ import (
 
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/handlers"
 	"github.com/ncfex/dcart-auth/internal/adapters/secondary/postgres"
-	"github.com/ncfex/dcart-auth/internal/core/application/services"
+	"github.com/ncfex/dcart-auth/internal/application/services"
 
 	"github.com/ncfex/dcart-auth/internal/config"
 

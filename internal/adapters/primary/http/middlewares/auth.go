@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ncfex/dcart-auth/internal/core/ports/inbound"
-	"github.com/ncfex/dcart-auth/internal/core/ports/outbound"
+	"github.com/ncfex/dcart-auth/internal/application/ports/inbound"
+	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
 
 	"github.com/ncfex/dcart-auth/pkg/httputil/request"
 	"github.com/ncfex/dcart-auth/pkg/httputil/response"

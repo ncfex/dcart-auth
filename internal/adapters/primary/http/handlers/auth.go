@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	userDomain "github.com/ncfex/dcart-auth/internal/core/domain/user"
+	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 	"github.com/ncfex/dcart-auth/pkg/httputil/request"
 )
 

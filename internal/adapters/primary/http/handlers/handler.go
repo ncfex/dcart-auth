@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/middlewares"
-	"github.com/ncfex/dcart-auth/internal/core/ports/inbound"
-	"github.com/ncfex/dcart-auth/internal/core/ports/outbound"
+	"github.com/ncfex/dcart-auth/internal/application/ports/inbound"
+	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
 
 	"github.com/ncfex/dcart-auth/pkg/httputil/response"
 	"github.com/ncfex/dcart-auth/pkg/middleware"

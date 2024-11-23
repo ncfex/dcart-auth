@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/ncfex/dcart-auth/internal/adapters/secondary/postgres/db"
-	tokenDomain "github.com/ncfex/dcart-auth/internal/core/domain/token"
-	userDomain "github.com/ncfex/dcart-auth/internal/core/domain/user"
-	"github.com/ncfex/dcart-auth/internal/core/ports/outbound"
+	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
+	tokenDomain "github.com/ncfex/dcart-auth/internal/domain/token"
+	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
 
 var (

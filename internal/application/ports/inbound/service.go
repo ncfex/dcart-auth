@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	tokenDomain "github.com/ncfex/dcart-auth/internal/core/domain/token"
-	userDomain "github.com/ncfex/dcart-auth/internal/core/domain/user"
+	tokenDomain "github.com/ncfex/dcart-auth/internal/domain/token"
+	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
 
 type AuthenticationService interface {

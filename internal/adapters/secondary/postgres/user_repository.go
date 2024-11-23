@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/ncfex/dcart-auth/internal/adapters/secondary/postgres/db"
-	userDomain "github.com/ncfex/dcart-auth/internal/core/domain/user"
-	"github.com/ncfex/dcart-auth/internal/core/ports/outbound"
+	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
+	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
 
 type userRepository struct {

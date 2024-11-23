@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	userDomain "github.com/ncfex/dcart-auth/internal/core/domain/user"
+	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
 
 type UserRepository interface {
