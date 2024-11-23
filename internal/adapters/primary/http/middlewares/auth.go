@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ncfex/dcart-auth/internal/application/ports/inbound"
 	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
 
 	"github.com/ncfex/dcart-auth/pkg/httputil/request"
@@ -15,7 +14,7 @@ import (
 )
 
 func RequireJWTAuth(
-	tokenGenerator inbound.TokenGenerator,
+	tokenGenerator outbound.TokenGenerator,
 	tokenRepo outbound.TokenRepository,
 	userRepo outbound.UserRepository,
 	responder response.Responder,

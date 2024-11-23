@@ -2,9 +2,7 @@ package inbound
 
 import (
 	"context"
-	"time"
 
-	"github.com/google/uuid"
 	tokenDomain "github.com/ncfex/dcart-auth/internal/domain/token"
 	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
@@ -15,18 +13,4 @@ type AuthenticationService interface {
 	Refresh(ctx context.Context, token string) (*tokenDomain.TokenPair, error)
 	Logout(ctx context.Context, token string) error
 	Validate(ctx context.Context, token string) (*userDomain.User, error)
-}
-
-type PasswordHasher interface {
-	Hash(password string) (string, error)
-	Compare(hashedPassword, password string) error
-}
-
-type TokenGenerator interface {
-	Generate(userID uuid.UUID, expiresIn time.Duration) (string, error)
-	Validate(token string) (uuid.UUID, error)
-}
-
-type RefreshTokenGenerator interface {
-	Generate() (string, error)
 }

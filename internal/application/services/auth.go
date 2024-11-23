@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ncfex/dcart-auth/internal/application/ports/inbound"
 	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
 	tokenDomain "github.com/ncfex/dcart-auth/internal/domain/token"
 	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
@@ -14,17 +13,17 @@ import (
 type service struct {
 	userRepo        outbound.UserRepository
 	tokenRepo       outbound.TokenRepository
-	passwordHasher  inbound.PasswordHasher
-	accessTokenGen  inbound.TokenGenerator
-	refreshTokenGen inbound.RefreshTokenGenerator
+	passwordHasher  outbound.PasswordHasher
+	accessTokenGen  outbound.TokenGenerator
+	refreshTokenGen outbound.RefreshTokenGenerator
 }
 
 func NewAuthService(
 	userRepo outbound.UserRepository,
 	tokenRepo outbound.TokenRepository,
-	passwordHasher inbound.PasswordHasher,
-	accessTokenGen inbound.TokenGenerator,
-	refreshTokenGen inbound.RefreshTokenGenerator,
+	passwordHasher outbound.PasswordHasher,
+	accessTokenGen outbound.TokenGenerator,
+	refreshTokenGen outbound.RefreshTokenGenerator,
 ) *service {
 	return &service{
 		userRepo:        userRepo,

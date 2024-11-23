@@ -16,7 +16,7 @@ type handler struct {
 	logger                *log.Logger
 	responder             response.Responder
 	authenticationService inbound.AuthenticationService
-	tokenGenerator        inbound.TokenGenerator
+	tokenGenerator        outbound.TokenGenerator
 	tokenRepo             outbound.TokenRepository
 	userRepo              outbound.UserRepository
 }
@@ -25,7 +25,7 @@ func NewHandler(
 	logger *log.Logger,
 	responder response.Responder,
 	authenticationService inbound.AuthenticationService,
-	tokenGenerator inbound.TokenGenerator,
+	tokenGenerator outbound.TokenGenerator,
 	tokenRepo outbound.TokenRepository,
 	userRepo outbound.UserRepository,
 ) *handler {
