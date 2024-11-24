@@ -35,10 +35,6 @@ func NewAuthService(
 }
 
 func (s *service) Register(ctx context.Context, username, password string) (*userDomain.User, error) {
-	if username == "" || password == "" {
-		return nil, userDomain.ErrInvalidCredentials
-	}
-
 	_, err := s.userRepo.GetUserByUsername(ctx, username)
 	if err == nil {
 		return nil, userDomain.ErrUserAlreadyExists
@@ -47,17 +43,23 @@ func (s *service) Register(ctx context.Context, username, password string) (*use
 		return nil, err
 	}
 
-	hashedPassword, err := s.passwordHasher.Hash(password)
+	user, err := userDomain.New(username, password)
 	if err != nil {
 		return nil, err
 	}
 
-	newUser := &userDomain.User{
-		Username:     username,
-		PasswordHash: hashedPassword,
+	hashedPassword, err := s.passwordHasher.Hash(password)
+	if err != nil {
+		return nil, err
+	}
+	user.SetHashedPassword(hashedPassword)
+
+	_, err = s.userRepo.CreateUser(ctx, user)
+	if err != nil {
+		return nil, err
 	}
 
-	return s.userRepo.CreateUser(ctx, newUser)
+	return user, nil
 }
 
 func (s *service) Login(ctx context.Context, username, password string) (*tokenDomain.TokenPair, error) {
