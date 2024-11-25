@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -48,7 +47,7 @@ func TestNew(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			user, err := New(tt.username, tt.password)
+			user, err := New("test", tt.username, tt.password)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -57,7 +56,7 @@ func TestNew(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, user)
-				assert.NotEqual(t, uuid.Nil, user.ID)
+				assert.NotEqual(t, "", user.ID)
 				assert.Equal(t, tt.username, user.Username)
 				assert.Empty(t, user.PasswordHash)
 				assert.WithinDuration(t, time.Now(), user.CreatedAt, time.Second)
@@ -68,7 +67,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestUser_SetHashedPassword(t *testing.T) {
-	user, err := New("testuser", "password123")
+	user, err := New("test", "testuser", "password123")
 	assert.NoError(t, err)
 
 	originalCreatedAt := user.CreatedAt
