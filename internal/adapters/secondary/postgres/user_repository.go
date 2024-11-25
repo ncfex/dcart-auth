@@ -6,7 +6,6 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
-
 	"github.com/ncfex/dcart-auth/internal/adapters/secondary/postgres/db"
 	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
 	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
@@ -41,7 +40,12 @@ func (r *userRepository) CreateUser(ctx context.Context, userObj *userDomain.Use
 	return db.ToUserDomain(&dbUser), nil
 }
 
-func (r *userRepository) GetUserByID(ctx context.Context, userID uuid.UUID) (*userDomain.User, error) {
+func (r *userRepository) GetUserByID(ctx context.Context, userIDString string) (*userDomain.User, error) {
+	userID, err := uuid.Parse(userIDString)
+	if err != nil {
+		return nil, err
+	}
+
 	dbUser, err := r.queries.GetUserByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

@@ -7,6 +7,7 @@ import (
 
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/ncfex/dcart-auth/internal/adapters/secondary/postgres/db"
 	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
 	tokenDomain "github.com/ncfex/dcart-auth/internal/domain/token"
@@ -33,13 +34,18 @@ func NewTokenRepository(database *database, expiresIn time.Duration) outbound.To
 }
 
 func (r *tokenRepository) StoreToken(ctx context.Context, user *userDomain.User, token string) error {
+	userID, err := uuid.Parse(user.ID)
+	if err != nil {
+		return userDomain.ErrInvalidCredentials
+	}
+
 	params := db.CreateRefreshTokenParams{
 		Token:     token,
-		UserID:    user.ID,
+		UserID:    userID,
 		ExpiresAt: time.Now().Add(r.expiresIn),
 	}
 
-	_, err := r.queries.CreateRefreshToken(ctx, params)
+	_, err = r.queries.CreateRefreshToken(ctx, params)
 	if err != nil {
 		return errors.Join(ErrStoringToken, err)
 	}

@@ -3,8 +3,6 @@ package token
 import (
 	"errors"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 var (
@@ -26,9 +24,9 @@ type TokenPair struct {
 
 type RefreshToken struct {
 	Token     string     `json:"token"`
+	UserID    string     `json:"user_id"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
-	UserID    uuid.UUID  `json:"user_id"`
 	ExpiresAt time.Time  `json:"expires_at"`
 	RevokedAt *time.Time `json:"revoked_at,omitempty"`
 }
