@@ -21,7 +21,7 @@ func NewUserService(
 
 func (s *userService) CreateUser(username, password string) (*userDomain.User, error) {
 	newID := uuid.New().String()
-	user, err := userDomain.New(newID, username, password)
+	user, err := userDomain.NewUser(newID, username, password)
 	if err != nil {
 		return nil, err
 	}

@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	ErrInvalidUser        = errors.New("invalid user")
 	ErrUserNotFound       = errors.New("user not found")
 	ErrUserAlreadyExists  = errors.New("user already exists")
 	ErrInvalidCredentials = errors.New("invalid username or password")
@@ -19,7 +20,10 @@ type User struct {
 	UpdatedAt    time.Time `json:"updated_at"`
 }
 
-func New(id, username, password string) (*User, error) {
+func NewUser(id, username, password string) (*User, error) {
+	if id == "" {
+		return nil, ErrInvalidUser
+	}
 	if err := validateUserName(username); err != nil {
 		return nil, err
 	}
