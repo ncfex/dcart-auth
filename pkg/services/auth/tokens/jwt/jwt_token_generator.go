@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 )
 
 var (
@@ -27,13 +26,13 @@ func NewJWTService(issuer, tokenSecret string) *service {
 	}
 }
 
-func (s *service) Generate(userID uuid.UUID, expiresIn time.Duration) (string, error) {
+func (s *service) Generate(subjectString string, expiresIn time.Duration) (string, error) {
 	currentTime := time.Now()
 	claims := jwt.RegisteredClaims{
 		Issuer:    s.issuer,
 		IssuedAt:  jwt.NewNumericDate(currentTime.UTC()),
 		ExpiresAt: jwt.NewNumericDate(currentTime.Add(expiresIn)),
-		Subject:   userID.String(),
+		Subject:   subjectString,
 	}
 
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(s.tokenSecret))
@@ -43,7 +42,7 @@ func (s *service) Generate(userID uuid.UUID, expiresIn time.Duration) (string, e
 	return token, nil
 }
 
-func (s *service) Validate(tokenString string) (uuid.UUID, error) {
+func (s *service) Validate(tokenString string) (string, error) {
 	claims := jwt.RegisteredClaims{}
 	token, err := jwt.ParseWithClaims(
 		tokenString,
@@ -51,26 +50,17 @@ func (s *service) Validate(tokenString string) (uuid.UUID, error) {
 		func(t *jwt.Token) (interface{}, error) { return []byte(s.tokenSecret), nil },
 	)
 	if err != nil {
-		return uuid.Nil, ErrTokenInvalid
+		return "", ErrTokenInvalid
 	}
 
 	userIDString, err := token.Claims.GetSubject()
 	if err != nil {
-		return uuid.Nil, ErrTokenInvalidClaims
+		return "", ErrTokenInvalidClaims
 	}
 
-	issuer, err := token.Claims.GetIssuer()
-	if err != nil {
-		return uuid.Nil, ErrTokenInvalidClaims
+	if issuer, err := token.Claims.GetIssuer(); err != nil || issuer != string(s.issuer) {
+		return "", ErrTokenInvalidClaims
 	}
 
-	if issuer != string(s.issuer) {
-		return uuid.Nil, ErrTokenInvalidIssuer
-	}
-
-	userID, err := uuid.Parse(userIDString)
-	if err != nil {
-		return uuid.Nil, ErrTokenInvalidClaims
-	}
-	return userID, nil
+	return userIDString, nil
 }

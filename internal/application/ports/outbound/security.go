@@ -2,8 +2,6 @@ package outbound
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type PasswordHasher interface {
@@ -12,8 +10,8 @@ type PasswordHasher interface {
 }
 
 type TokenGenerator interface {
-	Generate(userID uuid.UUID, expiresIn time.Duration) (string, error)
-	Validate(token string) (uuid.UUID, error)
+	Generate(subjectString string, expiresIn time.Duration) (tokenString string, err error)
+	Validate(tokenString string) (subjectString string, err error)
 }
 
 type RefreshTokenGenerator interface {
