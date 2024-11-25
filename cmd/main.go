@@ -47,12 +47,15 @@ func main() {
 	passwordHasher := credentials.NewBcryptHasher(0)
 	jwtService := jwt.NewJWTService("dcart", cfg.JwtSecret)
 	refreshTokenGenerator := refresh.NewHexRefreshGenerator("dc_", 32)
+
+	// app
+	userSvc := services.NewUserService(passwordHasher)
 	authService := services.NewAuthService(
 		userRepo,
 		tokenRepo,
-		passwordHasher,
 		jwtService,
 		refreshTokenGenerator,
+		userSvc,
 	)
 
 	logger := log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
