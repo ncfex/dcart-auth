@@ -18,9 +18,9 @@ func ToUserDomain(dbUser *User) *userDomain.User {
 }
 
 func ToRefreshTokenDomain(dbToken *RefreshToken) *tokenDomain.RefreshToken {
-	var revokedAt *time.Time
+	var revokedAt time.Time
 	if dbToken.RevokedAt.Valid {
-		revokedAt = &dbToken.RevokedAt.Time
+		revokedAt = dbToken.RevokedAt.Time
 	}
 
 	return &tokenDomain.RefreshToken{
