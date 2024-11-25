@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -106,4 +107,36 @@ func (q *Queries) RevokeRefreshToken(ctx context.Context, token string) (Refresh
 		&i.RevokedAt,
 	)
 	return i, err
+}
+
+const saveToken = `-- name: SaveToken :exec
+UPDATE refresh_tokens
+SET
+    user_id = $2,
+    created_at = $3,
+    updated_at = $4,
+    expires_at = $5,
+    revoked_at = $6
+WHERE token = $1
+`
+
+type SaveTokenParams struct {
+	Token     string       `json:"token"`
+	UserID    uuid.UUID    `json:"user_id"`
+	CreatedAt time.Time    `json:"created_at"`
+	UpdatedAt time.Time    `json:"updated_at"`
+	ExpiresAt time.Time    `json:"expires_at"`
+	RevokedAt sql.NullTime `json:"revoked_at"`
+}
+
+func (q *Queries) SaveToken(ctx context.Context, arg SaveTokenParams) error {
+	_, err := q.db.ExecContext(ctx, saveToken,
+		arg.Token,
+		arg.UserID,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+		arg.ExpiresAt,
+		arg.RevokedAt,
+	)
+	return err
 }

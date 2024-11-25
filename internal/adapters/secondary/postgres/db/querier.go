@@ -18,6 +18,7 @@ type Querier interface {
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUserFromRefreshToken(ctx context.Context, token string) (User, error)
 	RevokeRefreshToken(ctx context.Context, token string) (RefreshToken, error)
+	SaveToken(ctx context.Context, arg SaveTokenParams) error
 }
 
 var _ Querier = (*Queries)(nil)
