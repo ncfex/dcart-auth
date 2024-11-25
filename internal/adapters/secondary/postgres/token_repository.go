@@ -33,14 +33,14 @@ func NewTokenRepository(database *database, expiresIn time.Duration) outbound.To
 	}
 }
 
-func (r *tokenRepository) StoreToken(ctx context.Context, user *userDomain.User, token string) error {
-	userID, err := uuid.Parse(user.ID)
+func (r *tokenRepository) StoreToken(ctx context.Context, token *tokenDomain.RefreshToken) error {
+	userID, err := uuid.Parse(token.UserID)
 	if err != nil {
 		return userDomain.ErrInvalidCredentials
 	}
 
 	params := db.CreateRefreshTokenParams{
-		Token:     token,
+		Token:     token.Token,
 		UserID:    userID,
 		ExpiresAt: time.Now().Add(r.expiresIn),
 	}
@@ -84,6 +84,34 @@ func (r *tokenRepository) RevokeToken(ctx context.Context, tokenString string) e
 			return tokenDomain.ErrTokenNotFound
 		}
 		return err
+	}
+
+	return nil
+}
+
+func (r *tokenRepository) Save(ctx context.Context, token *tokenDomain.RefreshToken) error {
+	userID, err := uuid.Parse(token.UserID)
+	if err != nil {
+		return ErrStoringToken
+	}
+
+	revokedAt := sql.NullTime{
+		Time:  token.RevokedAt,
+		Valid: !token.RevokedAt.IsZero(),
+	}
+
+	params := db.SaveTokenParams{
+		Token:     token.Token,
+		UserID:    userID,
+		CreatedAt: token.CreatedAt,
+		UpdatedAt: token.UpdatedAt,
+		ExpiresAt: token.ExpiresAt,
+		RevokedAt: revokedAt,
+	}
+
+	err = r.queries.SaveToken(ctx, params)
+	if err != nil {
+		return ErrStoringToken
 	}
 
 	return nil
