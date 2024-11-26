@@ -10,7 +10,7 @@ import (
 type AuthenticationService interface {
 	Register(ctx context.Context, username string, password string) (*userDomain.User, error)
 	Login(ctx context.Context, username string, password string) (*tokenDomain.TokenPair, error)
-	Refresh(ctx context.Context, token string) (*tokenDomain.TokenPair, error)
-	Logout(ctx context.Context, token string) error
-	Validate(ctx context.Context, token string) (*userDomain.User, error)
+	Refresh(ctx context.Context, tokenString string) (*tokenDomain.TokenPair, error)
+	Logout(ctx context.Context, tokenString string) error
+	Validate(ctx context.Context, tokenString string) (*userDomain.User, error)
 }

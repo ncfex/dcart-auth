@@ -2,156 +2,96 @@ package services
 
 import (
 	"context"
-	"time"
+	"fmt"
 
 	"github.com/ncfex/dcart-auth/internal/application/ports/inbound"
-	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
 	tokenDomain "github.com/ncfex/dcart-auth/internal/domain/token"
 	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
 
 type service struct {
-	userRepo        outbound.UserRepository
-	tokenRepo       outbound.TokenRepository
-	accessTokenGen  outbound.TokenGenerator
-	refreshTokenGen outbound.RefreshTokenGenerator
-	// svc
-	userService inbound.UserSevice
+	userService  inbound.UserSevice
+	tokenService inbound.TokenService
 }
 
 func NewAuthService(
-	userRepo outbound.UserRepository,
-	tokenRepo outbound.TokenRepository,
-	accessTokenGen outbound.TokenGenerator,
-	refreshTokenGen outbound.RefreshTokenGenerator,
-	// svc
 	userService inbound.UserSevice,
+	tokenService inbound.TokenService,
 ) *service {
 	return &service{
-		userRepo:        userRepo,
-		tokenRepo:       tokenRepo,
-		accessTokenGen:  accessTokenGen,
-		refreshTokenGen: refreshTokenGen,
-		userService:     userService,
+		userService:  userService,
+		tokenService: tokenService,
 	}
 }
 
 func (s *service) Register(ctx context.Context, username, password string) (*userDomain.User, error) {
-	_, err := s.userRepo.GetUserByUsername(ctx, username)
-	if err == nil {
-		return nil, userDomain.ErrUserAlreadyExists
-	}
-	if err != userDomain.ErrUserNotFound {
-		return nil, err
-	}
-
-	user, err := s.userService.CreateUser(username, password)
+	user, err := s.userService.CreateUser(ctx, username, password)
 	if err != nil {
-		return nil, userDomain.ErrInvalidCredentials
+		return nil, fmt.Errorf("create user: %w", err)
 	}
-
-	_, err = s.userRepo.CreateUser(ctx, user)
-	if err != nil {
-		return nil, err
-	}
-
 	return user, nil
 }
 
 func (s *service) Login(ctx context.Context, username, password string) (*tokenDomain.TokenPair, error) {
-	if username == "" || password == "" {
-		return nil, userDomain.ErrInvalidCredentials
-	}
-	user, err := s.userRepo.GetUserByUsername(ctx, username)
+	user, err := s.userService.ValidateWithCreds(ctx, username, password)
 	if err != nil {
-		return nil, userDomain.ErrInvalidCredentials
+		return nil, fmt.Errorf("validate with creds: %w", err)
 	}
 
-	err = s.userService.ComparePassword(user.PasswordHash, password)
-	if err != nil {
-		return nil, userDomain.ErrInvalidCredentials
+	createTokenParams := inbound.CreateTokenParams{
+		UserID: user.ID,
 	}
-
-	accessTokenString, err := s.accessTokenGen.Generate(user.ID, time.Minute*15)
+	tokenPair, err := s.tokenService.CreateTokenPair(ctx, createTokenParams)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create token pair: %w", err)
 	}
-
-	refreshTokenString, err := s.refreshTokenGen.Generate()
-	if err != nil {
-		return nil, err
-	}
-
-	refreshToken, err := tokenDomain.NewRefreshToken(refreshTokenString, user.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.tokenRepo.StoreToken(ctx, refreshToken)
-	if err != nil {
-		return nil, err
-	}
-
 	return &tokenDomain.TokenPair{
-		AccessToken:  accessTokenString,
-		RefreshToken: refreshTokenString,
+		AccessToken:  tokenPair.AccessToken,
+		RefreshToken: tokenPair.RefreshToken,
 	}, nil
 }
 
 func (s *service) Refresh(ctx context.Context, tokenString string) (*tokenDomain.TokenPair, error) {
-	if tokenString == "" {
-		return nil, tokenDomain.ErrTokenInvalid
-	}
-	refreshToken, err := s.tokenRepo.GetTokenByTokenString(ctx, tokenString)
+	refreshToken, err := s.tokenService.ValidateRefreshToken(ctx, tokenString)
 	if err != nil {
-		return nil, tokenDomain.ErrTokenInvalid
+		return nil, fmt.Errorf("validate refresh token: %w", err)
 	}
 
-	user, err := s.userRepo.GetUserByID(ctx, refreshToken.UserID)
+	user, err := s.userService.ValidateWithID(ctx, refreshToken.UserID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("validate with id: %w", err)
 	}
 
-	accessToken, err := s.accessTokenGen.Generate(user.ID, time.Minute*15)
-	if err != nil {
-		return nil, err
+	params := inbound.CreateTokenParams{
+		UserID: user.ID,
 	}
-
+	accessTokenString, err := s.tokenService.CreateAccessToken(params)
+	if err != nil {
+		return nil, fmt.Errorf("create access token: %w", err)
+	}
 	return &tokenDomain.TokenPair{
-		AccessToken:  accessToken,
+		AccessToken:  accessTokenString,
 		RefreshToken: refreshToken.Token,
 	}, nil
 }
 
 func (s *service) Logout(ctx context.Context, tokenString string) error {
-	token, err := s.tokenRepo.GetTokenByTokenString(ctx, tokenString)
-	if err != nil {
-		return tokenDomain.ErrTokenInvalid
-	}
-
-	token.Revoke()
-
-	err = s.tokenRepo.Save(ctx, token)
-	if err != nil {
-		return err
+	fmt.Println(tokenString)
+	if err := s.tokenService.RevokeRefreshToken(ctx, tokenString); err != nil {
+		return fmt.Errorf("revoke refresh token: %w", err)
 	}
 	return nil
 }
 
 func (s *service) Validate(ctx context.Context, token string) (*userDomain.User, error) {
-	if token == "" {
-		return nil, tokenDomain.ErrTokenInvalid
-	}
-
-	userID, err := s.accessTokenGen.Validate(token)
+	userID, err := s.tokenService.ValidateAccessToken(token)
 	if err != nil {
-		return nil, tokenDomain.ErrTokenInvalid
+		return nil, fmt.Errorf("validate access token: %w", err)
 	}
 
-	user, err := s.userRepo.GetUserByID(ctx, userID)
+	user, err := s.userService.ValidateWithID(ctx, userID)
 	if err != nil {
-		return nil, userDomain.ErrUserNotFound
+		return nil, fmt.Errorf("validate with id: %w", err)
 	}
-
 	return user, nil
 }
