@@ -3,6 +3,8 @@ package user
 import (
 	"errors"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 var (
@@ -20,10 +22,7 @@ type User struct {
 	UpdatedAt    time.Time `json:"updated_at"`
 }
 
-func NewUser(id, username, password string) (*User, error) {
-	if id == "" {
-		return nil, ErrInvalidUser
-	}
+func NewUser(username, password string) (*User, error) {
 	if err := validateUserName(username); err != nil {
 		return nil, err
 	}
@@ -31,6 +30,7 @@ func NewUser(id, username, password string) (*User, error) {
 		return nil, err
 	}
 
+	id := uuid.New().String()
 	now := time.Now()
 	return &User{
 		ID:        id,

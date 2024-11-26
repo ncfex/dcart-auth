@@ -47,7 +47,7 @@ func TestNew(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			user, err := NewUser("test", tt.username, tt.password)
+			user, err := NewUser(tt.username, tt.password)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -67,7 +67,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestUser_SetHashedPassword(t *testing.T) {
-	user, err := NewUser("test", "testuser", "password123")
+	user, err := NewUser("testuser", "password123")
 	assert.NoError(t, err)
 
 	originalCreatedAt := user.CreatedAt
