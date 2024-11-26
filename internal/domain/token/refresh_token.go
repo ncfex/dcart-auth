@@ -50,3 +50,15 @@ func (rt *RefreshToken) Expire() {
 	rt.ExpiresAt = now
 	rt.UpdatedAt = now
 }
+
+func (rt *RefreshToken) IsValid() error {
+	if !rt.RevokedAt.IsZero() {
+		return ErrTokenRevoked
+	}
+
+	if rt.ExpiresAt.Before(time.Now()) {
+		return ErrTokenExpired
+	}
+
+	return nil
+}
