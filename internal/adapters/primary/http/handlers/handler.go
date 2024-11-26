@@ -16,7 +16,7 @@ type handler struct {
 	logger                *log.Logger
 	responder             response.Responder
 	authenticationService inbound.AuthenticationService
-	tokenGenerator        outbound.TokenGenerator
+	tokenManager          outbound.TokenGeneratorValidator
 	tokenRepo             outbound.TokenRepository
 	userRepo              outbound.UserRepository
 }
@@ -25,7 +25,7 @@ func NewHandler(
 	logger *log.Logger,
 	responder response.Responder,
 	authenticationService inbound.AuthenticationService,
-	tokenGenerator outbound.TokenGenerator,
+	tokenManager outbound.TokenGeneratorValidator,
 	tokenRepo outbound.TokenRepository,
 	userRepo outbound.UserRepository,
 ) *handler {
@@ -33,7 +33,7 @@ func NewHandler(
 		logger:                logger,
 		authenticationService: authenticationService,
 		responder:             responder,
-		tokenGenerator:        tokenGenerator,
+		tokenManager:          tokenManager,
 		tokenRepo:             tokenRepo,
 		userRepo:              userRepo,
 	}
@@ -62,7 +62,7 @@ func (h *handler) RegisterRoutes() *http.ServeMux {
 
 	accessTokenProtectedChain := middleware.Chain(
 		middlewares.RequireJWTAuth(
-			h.tokenGenerator,
+			h.tokenManager,
 			h.tokenRepo,
 			h.userRepo,
 			h.responder,

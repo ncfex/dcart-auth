@@ -45,17 +45,19 @@ func main() {
 	tokenRepo := postgres.NewTokenRepository(db, 24*7*time.Hour)
 
 	passwordHasher := credentials.NewBcryptHasher(0)
-	jwtService := jwt.NewJWTService("dcart", cfg.JwtSecret)
+	jwtManager := jwt.NewJWTService("dcart", cfg.JwtSecret, time.Minute*15)
 	refreshTokenGenerator := refresh.NewHexRefreshGenerator("dc_", 32)
 
 	// app
 	userSvc := services.NewUserService(passwordHasher)
+	tokenSvc := services.NewTokenService(jwtManager, refreshTokenGenerator)
 	authService := services.NewAuthService(
 		userRepo,
 		tokenRepo,
-		jwtService,
+		jwtManager,
 		refreshTokenGenerator,
 		userSvc,
+		tokenSvc,
 	)
 
 	logger := log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
@@ -65,7 +67,7 @@ func main() {
 		logger,
 		responder,
 		authService,
-		jwtService,
+		jwtManager,
 		tokenRepo,
 		userRepo,
 	)
