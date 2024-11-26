@@ -23,13 +23,18 @@ func NewHexRefreshGenerator(prefix string, tokenLength int) *hexRefreshGenerator
 	}
 }
 
-func (g *hexRefreshGenerator) Generate() (string, error) {
+func (g *hexRefreshGenerator) Generate(customPrefix string) (string, error) {
+	prefix := g.prefix
+	if customPrefix != "" {
+		prefix = customPrefix
+	}
+
 	token := make([]byte, g.tokenLength)
 	_, err := rand.Read(token)
 	if err != nil {
 		return "", ErrTokenGenerationFailed
 	}
 
-	tokenString := fmt.Sprintf("%s%s", g.prefix, hex.EncodeToString(token))
+	tokenString := fmt.Sprintf("%s%s", prefix, hex.EncodeToString(token))
 	return tokenString, nil
 }

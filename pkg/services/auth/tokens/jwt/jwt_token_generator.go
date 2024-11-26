@@ -17,21 +17,23 @@ var (
 type service struct {
 	issuer      string
 	tokenSecret string
+	ttl         time.Duration
 }
 
-func NewJWTService(issuer, tokenSecret string) *service {
+func NewJWTService(issuer, tokenSecret string, ttl time.Duration) *service {
 	return &service{
 		issuer:      issuer,
 		tokenSecret: tokenSecret,
+		ttl:         ttl,
 	}
 }
 
-func (s *service) Generate(subjectString string, expiresIn time.Duration) (string, error) {
+func (s *service) Generate(subjectString string) (string, error) {
 	currentTime := time.Now()
 	claims := jwt.RegisteredClaims{
 		Issuer:    s.issuer,
 		IssuedAt:  jwt.NewNumericDate(currentTime.UTC()),
-		ExpiresAt: jwt.NewNumericDate(currentTime.Add(expiresIn)),
+		ExpiresAt: jwt.NewNumericDate(currentTime.Add(s.ttl)),
 		Subject:   subjectString,
 	}
 
