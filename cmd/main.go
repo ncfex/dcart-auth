@@ -49,13 +49,9 @@ func main() {
 	refreshTokenGenerator := refresh.NewHexRefreshGenerator("dc_", 32)
 
 	// app
-	userSvc := services.NewUserService(passwordHasher)
-	tokenSvc := services.NewTokenService(jwtManager, refreshTokenGenerator)
+	userSvc := services.NewUserService(passwordHasher, userRepo)
+	tokenSvc := services.NewTokenService(jwtManager, refreshTokenGenerator, tokenRepo)
 	authService := services.NewAuthService(
-		userRepo,
-		tokenRepo,
-		jwtManager,
-		refreshTokenGenerator,
 		userSvc,
 		tokenSvc,
 	)
