@@ -23,21 +23,21 @@ func NewUserRepository(database *database) outbound.UserRepository {
 	}
 }
 
-func (r *userRepository) CreateUser(ctx context.Context, userObj *userDomain.User) (*userDomain.User, error) {
+func (r *userRepository) CreateUser(ctx context.Context, userObj *userDomain.User) error {
 	params := db.CreateUserParams{
 		Username:     userObj.Username,
 		PasswordHash: userObj.PasswordHash,
 	}
 
-	dbUser, err := r.queries.CreateUser(ctx, params)
+	_, err := r.queries.CreateUser(ctx, params)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, userDomain.ErrUserAlreadyExists
+			return userDomain.ErrUserAlreadyExists
 		}
-		return nil, err
+		return err
 	}
 
-	return db.ToUserDomain(&dbUser), nil
+	return nil
 }
 
 func (r *userRepository) GetUserByID(ctx context.Context, userIDString string) (*userDomain.User, error) {
