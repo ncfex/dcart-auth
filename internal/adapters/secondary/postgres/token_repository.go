@@ -33,7 +33,7 @@ func NewTokenRepository(database *database, expiresIn time.Duration) outbound.To
 	}
 }
 
-func (r *tokenRepository) StoreToken(ctx context.Context, token *tokenDomain.RefreshToken) error {
+func (r *tokenRepository) Add(ctx context.Context, token *tokenDomain.RefreshToken) error {
 	userID, err := uuid.Parse(token.UserID)
 	if err != nil {
 		return userDomain.ErrInvalidCredentials
@@ -53,7 +53,7 @@ func (r *tokenRepository) StoreToken(ctx context.Context, token *tokenDomain.Ref
 	return nil
 }
 
-func (r *tokenRepository) GetTokenByTokenString(ctx context.Context, tokenString string) (*tokenDomain.RefreshToken, error) {
+func (r *tokenRepository) GetByToken(ctx context.Context, tokenString string) (*tokenDomain.RefreshToken, error) {
 	refreshToken, err := r.queries.GetTokenByTokenString(ctx, tokenString)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -65,7 +65,7 @@ func (r *tokenRepository) GetTokenByTokenString(ctx context.Context, tokenString
 	return db.ToRefreshTokenDomain(&refreshToken), nil
 }
 
-func (r *tokenRepository) GetUserFromToken(ctx context.Context, tokenString string) (*userDomain.User, error) {
+func (r *tokenRepository) GetUserByToken(ctx context.Context, tokenString string) (*userDomain.User, error) {
 	user, err := r.queries.GetUserFromRefreshToken(ctx, tokenString)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -77,7 +77,7 @@ func (r *tokenRepository) GetUserFromToken(ctx context.Context, tokenString stri
 	return db.ToUserDomain(&user), nil
 }
 
-func (r *tokenRepository) RevokeToken(ctx context.Context, tokenString string) error {
+func (r *tokenRepository) Revoke(ctx context.Context, tokenString string) error {
 	_, err := r.queries.RevokeRefreshToken(ctx, tokenString)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

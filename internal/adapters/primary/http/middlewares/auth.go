@@ -69,7 +69,7 @@ func RequireRefreshToken(
 				return
 			}
 
-			user, err := tokenRepo.GetUserFromToken(ctx, refreshToken)
+			user, err := tokenRepo.GetUserByToken(ctx, refreshToken)
 			if err != nil {
 				switch {
 				case errors.Is(err, context.DeadlineExceeded):

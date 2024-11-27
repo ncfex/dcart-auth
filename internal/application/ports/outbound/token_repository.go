@@ -8,9 +8,9 @@ import (
 )
 
 type TokenRepository interface {
-	StoreToken(ctx context.Context, token *tokenDomain.RefreshToken) error
-	GetTokenByTokenString(ctx context.Context, token string) (*tokenDomain.RefreshToken, error)
-	GetUserFromToken(ctx context.Context, token string) (*userDomain.User, error)
-	RevokeToken(ctx context.Context, token string) error
+	Add(ctx context.Context, token *tokenDomain.RefreshToken) error
+	GetByToken(ctx context.Context, token string) (*tokenDomain.RefreshToken, error)
+	GetUserByToken(ctx context.Context, token string) (*userDomain.User, error)
+	Revoke(ctx context.Context, token string) error
 	Save(ctx context.Context, token *tokenDomain.RefreshToken) error
 }

@@ -76,14 +76,14 @@ func (svc *tokenService) CreateRefreshToken(
 		return nil, fmt.Errorf("new refresh token: %w", err)
 	}
 
-	if err := svc.tokenRepo.StoreToken(ctx, refreshToken); err != nil {
+	if err := svc.tokenRepo.Add(ctx, refreshToken); err != nil {
 		return nil, fmt.Errorf("store token: %w", err)
 	}
 	return refreshToken, nil
 }
 
 func (svc *tokenService) ValidateRefreshToken(ctx context.Context, tokenString string) (*token.RefreshToken, error) {
-	refreshToken, err := svc.tokenRepo.GetTokenByTokenString(ctx, tokenString)
+	refreshToken, err := svc.tokenRepo.GetByToken(ctx, tokenString)
 	if err != nil {
 		return nil, fmt.Errorf("get token string: %w", err)
 	}
@@ -95,7 +95,7 @@ func (svc *tokenService) ValidateRefreshToken(ctx context.Context, tokenString s
 }
 
 func (svc *tokenService) RevokeRefreshToken(ctx context.Context, tokenString string) error {
-	token, err := svc.tokenRepo.GetTokenByTokenString(ctx, tokenString)
+	token, err := svc.tokenRepo.GetByToken(ctx, tokenString)
 	if err != nil {
 		return fmt.Errorf("get token string: %w", err)
 	}
