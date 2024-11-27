@@ -14,7 +14,6 @@ import (
 	"github.com/ncfex/dcart-auth/internal/config"
 
 	"github.com/ncfex/dcart-auth/pkg/httputil/response"
-	"github.com/ncfex/dcart-auth/pkg/services/auth/credentials"
 	"github.com/ncfex/dcart-auth/pkg/services/auth/tokens/jwt"
 	"github.com/ncfex/dcart-auth/pkg/services/auth/tokens/refresh"
 )
@@ -44,12 +43,11 @@ func main() {
 	userRepo := postgres.NewUserRepository(db)
 	tokenRepo := postgres.NewTokenRepository(db, 24*7*time.Hour)
 
-	passwordHasher := credentials.NewBcryptHasher(0)
 	jwtManager := jwt.NewJWTService("dcart", cfg.JwtSecret, time.Minute*15)
 	refreshTokenGenerator := refresh.NewHexRefreshGenerator("dc_", 32)
 
 	// app
-	userSvc := services.NewUserService(passwordHasher, userRepo)
+	userSvc := services.NewUserService(userRepo)
 	tokenSvc := services.NewTokenService(jwtManager, refreshTokenGenerator, tokenRepo)
 	authService := services.NewAuthService(
 		userSvc,

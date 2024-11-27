@@ -10,17 +10,14 @@ import (
 )
 
 type userService struct {
-	passwordHasher outbound.PasswordHasher
-	userRepo       outbound.UserRepository
+	userRepo outbound.UserRepository
 }
 
 func NewUserService(
-	passwordHasher outbound.PasswordHasher,
 	userRepo outbound.UserRepository,
 ) inbound.UserSevice {
 	return &userService{
-		passwordHasher: passwordHasher,
-		userRepo:       userRepo,
+		userRepo: userRepo,
 	}
 }
 
@@ -38,13 +35,6 @@ func (s *userService) CreateUser(ctx context.Context, username, password string)
 		return nil, fmt.Errorf("new user: %w", err)
 	}
 
-	hashedPassword, err := s.passwordHasher.Hash(password)
-	if err != nil {
-		return nil, fmt.Errorf("password hash: %w", err)
-	}
-
-	user.SetHashedPassword(hashedPassword)
-
 	if err := s.userRepo.Add(ctx, user); err != nil {
 		return nil, fmt.Errorf("create user: %w", err)
 	}
@@ -57,8 +47,8 @@ func (s *userService) ValidateWithCreds(ctx context.Context, username, password 
 		return nil, fmt.Errorf("get user username: %w", err)
 	}
 
-	if err := s.comparePassword(user.PasswordHash, password); err != nil {
-		return nil, fmt.Errorf("compare password: %w", err)
+	if ok := user.Authenticate(password); !ok {
+		return nil, fmt.Errorf("authenticate wrong password")
 	}
 	return user, nil
 }
@@ -69,11 +59,4 @@ func (s *userService) ValidateWithID(ctx context.Context, userID string) (*userD
 		return nil, fmt.Errorf("get user id: %w", err)
 	}
 	return user, nil
-}
-
-func (s *userService) comparePassword(hashedPassword, password string) error {
-	if err := s.passwordHasher.Compare(hashedPassword, password); err != nil {
-		return fmt.Errorf("compare: %w", err)
-	}
-	return nil
 }
