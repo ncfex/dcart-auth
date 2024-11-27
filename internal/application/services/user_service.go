@@ -25,7 +25,7 @@ func NewUserService(
 }
 
 func (s *userService) CreateUser(ctx context.Context, username, password string) (*userDomain.User, error) {
-	_, err := s.userRepo.GetUserByUsername(ctx, username)
+	_, err := s.userRepo.GetByUsername(ctx, username)
 	if err == nil {
 		return nil, fmt.Errorf("get user username: %w", userDomain.ErrUserAlreadyExists)
 	}
@@ -45,14 +45,14 @@ func (s *userService) CreateUser(ctx context.Context, username, password string)
 
 	user.SetHashedPassword(hashedPassword)
 
-	if err := s.userRepo.CreateUser(ctx, user); err != nil {
+	if err := s.userRepo.Add(ctx, user); err != nil {
 		return nil, fmt.Errorf("create user: %w", err)
 	}
 	return user, nil
 }
 
 func (s *userService) ValidateWithCreds(ctx context.Context, username, password string) (*userDomain.User, error) {
-	user, err := s.userRepo.GetUserByUsername(ctx, username)
+	user, err := s.userRepo.GetByUsername(ctx, username)
 	if err != nil {
 		return nil, fmt.Errorf("get user username: %w", err)
 	}
@@ -64,7 +64,7 @@ func (s *userService) ValidateWithCreds(ctx context.Context, username, password 
 }
 
 func (s *userService) ValidateWithID(ctx context.Context, userID string) (*userDomain.User, error) {
-	user, err := s.userRepo.GetUserByID(ctx, userID)
+	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get user id: %w", err)
 	}

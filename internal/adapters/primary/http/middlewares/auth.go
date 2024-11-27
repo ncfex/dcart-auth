@@ -36,7 +36,7 @@ func RequireJWTAuth(
 				return
 			}
 
-			user, err := userRepo.GetUserByID(ctx, userID)
+			user, err := userRepo.GetByID(ctx, userID)
 			if err != nil {
 				switch {
 				case errors.Is(err, context.DeadlineExceeded):

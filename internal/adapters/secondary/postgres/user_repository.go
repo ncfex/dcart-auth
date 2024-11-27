@@ -23,10 +23,10 @@ func NewUserRepository(database *database) outbound.UserRepository {
 	}
 }
 
-func (r *userRepository) CreateUser(ctx context.Context, userObj *userDomain.User) error {
+func (r *userRepository) Add(ctx context.Context, user *userDomain.User) error {
 	params := db.CreateUserParams{
-		Username:     userObj.Username,
-		PasswordHash: userObj.PasswordHash,
+		Username:     user.Username,
+		PasswordHash: user.PasswordHash,
 	}
 
 	_, err := r.queries.CreateUser(ctx, params)
@@ -40,7 +40,7 @@ func (r *userRepository) CreateUser(ctx context.Context, userObj *userDomain.Use
 	return nil
 }
 
-func (r *userRepository) GetUserByID(ctx context.Context, userIDString string) (*userDomain.User, error) {
+func (r *userRepository) GetByID(ctx context.Context, userIDString string) (*userDomain.User, error) {
 	userID, err := uuid.Parse(userIDString)
 	if err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func (r *userRepository) GetUserByID(ctx context.Context, userIDString string) (
 	return db.ToUserDomain(&dbUser), nil
 }
 
-func (r *userRepository) GetUserByUsername(ctx context.Context, username string) (*userDomain.User, error) {
+func (r *userRepository) GetByUsername(ctx context.Context, username string) (*userDomain.User, error) {
 	dbUser, err := r.queries.GetUserByUsername(ctx, username)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
