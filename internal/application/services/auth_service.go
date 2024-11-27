@@ -76,7 +76,6 @@ func (s *service) Refresh(ctx context.Context, tokenString string) (*tokenDomain
 }
 
 func (s *service) Logout(ctx context.Context, tokenString string) error {
-	fmt.Println(tokenString)
 	if err := s.tokenService.RevokeRefreshToken(ctx, tokenString); err != nil {
 		return fmt.Errorf("revoke refresh token: %w", err)
 	}
