@@ -2,123 +2,112 @@ package user
 
 import (
 	"testing"
-	"time"
-
-	"github.com/stretchr/testify/assert"
 )
 
-func TestNew(t *testing.T) {
+func TestNewUser(t *testing.T) {
 	tests := []struct {
 		name          string
 		username      string
 		password      string
-		expectError   bool
 		expectedError error
 	}{
 		{
-			name:          "Valid user creation",
+			name:          "valid user",
 			username:      "testuser",
-			password:      "password123",
-			expectError:   false,
+			password:      "validpass123",
 			expectedError: nil,
 		},
 		{
-			name:          "Empty username",
+			name:          "empty username",
 			username:      "",
-			password:      "password123",
-			expectError:   true,
+			password:      "validpass123",
 			expectedError: ErrInvalidCredentials,
 		},
 		{
-			name:          "Empty password",
-			username:      "testuser",
-			password:      "",
-			expectError:   true,
-			expectedError: ErrInvalidCredentials,
-		},
-		{
-			name:          "Short password",
+			name:          "password too short",
 			username:      "testuser",
 			password:      "short",
-			expectError:   true,
-			expectedError: ErrInvalidCredentials,
+			expectedError: ErrPasswordTooShort,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			user, err := NewUser(tt.username, tt.password)
+			u, err := NewUser(tt.username, tt.password)
+			if err != tt.expectedError {
+				t.Errorf("NewUser() error = %v, expected error %v", err, tt.expectedError)
+				return
+			}
 
-			if tt.expectError {
-				assert.Error(t, err)
-				assert.Equal(t, tt.expectedError, err)
-				assert.Nil(t, user)
-			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, user)
-				assert.NotEqual(t, "", user.ID)
-				assert.Equal(t, tt.username, user.Username)
-				assert.Empty(t, user.PasswordHash)
-				assert.WithinDuration(t, time.Now(), user.CreatedAt, time.Second)
-				assert.WithinDuration(t, time.Now(), user.UpdatedAt, time.Second)
+			if err == nil {
+				if u.Username != tt.username {
+					t.Errorf("NewUser() username = %v, expected %v", u.Username, tt.username)
+				}
+
+				if u.ID == "" {
+					t.Error("NewUser() ID is empty")
+				}
+
+				if u.PasswordHash == "" {
+					t.Error("NewUser() PasswordHash is empty")
+				}
+
+				if u.CreatedAt.IsZero() {
+					t.Error("NewUser() CreatedAt is zero")
+				}
+
+				if u.UpdatedAt.IsZero() {
+					t.Error("NewUser() UpdatedAt is zero")
+				}
+
+				if u.CreatedAt != u.UpdatedAt {
+					t.Error("NewUser() CreatedAt and UpdatedAt should be equal for new user")
+				}
 			}
 		})
 	}
 }
 
-func TestUser_SetHashedPassword(t *testing.T) {
-	user, err := NewUser("testuser", "password123")
-	assert.NoError(t, err)
-
-	originalCreatedAt := user.CreatedAt
-	originalUpdatedAt := user.UpdatedAt
-
-	time.Sleep(time.Millisecond)
-
-	hashedPassword := "hashedpassword123"
-	user.SetHashedPassword(hashedPassword)
-
-	assert.Equal(t, hashedPassword, user.PasswordHash)
-	assert.Equal(t, originalCreatedAt, user.CreatedAt)
-	assert.True(t, user.UpdatedAt.After(originalUpdatedAt))
-}
-
-func TestValidatePassword(t *testing.T) {
+func TestUser_Authenticate(t *testing.T) {
 	tests := []struct {
 		name          string
+		username      string
 		password      string
-		expectError   bool
-		expectedError error
+		testPassword  string
+		shouldSucceed bool
 	}{
 		{
-			name:          "Valid password",
-			password:      "password123",
-			expectError:   false,
-			expectedError: nil,
+			name:          "correct password",
+			username:      "testuser",
+			password:      "validpass123",
+			testPassword:  "validpass123",
+			shouldSucceed: true,
 		},
 		{
-			name:          "Empty password",
-			password:      "",
-			expectError:   true,
-			expectedError: ErrInvalidCredentials,
+			name:          "incorrect password",
+			username:      "testuser",
+			password:      "validpass123",
+			testPassword:  "wrongpass123",
+			shouldSucceed: false,
 		},
 		{
-			name:          "Short password",
-			password:      "short",
-			expectError:   true,
-			expectedError: ErrInvalidCredentials,
+			name:          "empty password",
+			username:      "testuser",
+			password:      "validpass123",
+			testPassword:  "",
+			shouldSucceed: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := validatePassword(tt.password)
+			u, err := NewUser(tt.username, tt.password)
+			if err != nil {
+				t.Fatalf("Failed to create user: %v", err)
+			}
 
-			if tt.expectError {
-				assert.Error(t, err)
-				assert.Equal(t, tt.expectedError, err)
-			} else {
-				assert.NoError(t, err)
+			if authenticated := u.Authenticate(tt.testPassword); authenticated != tt.shouldSucceed {
+				t.Errorf("Authenticate() = %v, expected %v", authenticated, tt.shouldSucceed)
 			}
 		})
 	}
@@ -128,32 +117,25 @@ func TestValidateUsername(t *testing.T) {
 	tests := []struct {
 		name          string
 		username      string
-		expectError   bool
 		expectedError error
 	}{
 		{
-			name:          "Valid username",
+			name:          "valid username",
 			username:      "testuser",
-			expectError:   false,
 			expectedError: nil,
 		},
 		{
-			name:          "Empty username",
+			name:          "empty username",
 			username:      "",
-			expectError:   true,
 			expectedError: ErrInvalidCredentials,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := validateUserName(tt.username)
-
-			if tt.expectError {
-				assert.Error(t, err)
-				assert.Equal(t, tt.expectedError, err)
-			} else {
-				assert.NoError(t, err)
+			_, err := NewUser(tt.username, "validpass123")
+			if err != tt.expectedError {
+				t.Errorf("validateUsername() error = %v, expected error %v", err, tt.expectedError)
 			}
 		})
 	}

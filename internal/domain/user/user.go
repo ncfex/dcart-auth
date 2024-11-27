@@ -22,36 +22,37 @@ type User struct {
 	UpdatedAt    time.Time `json:"updated_at"`
 }
 
-func NewUser(username, password string) (*User, error) {
+func NewUser(username, rawPassword string) (*User, error) {
 	if err := validateUserName(username); err != nil {
 		return nil, err
 	}
-	if err := validatePassword(password); err != nil {
+
+	password, err := NewPassword(rawPassword)
+	if err != nil {
 		return nil, err
 	}
 
-	id := uuid.New().String()
+	hashedPassword, err := password.Hash()
+	if err != nil {
+		return nil, err
+	}
+
 	now := time.Now()
 	return &User{
-		ID:        id,
-		Username:  username,
-		CreatedAt: now,
-		UpdatedAt: now,
+		ID:           uuid.New().String(),
+		Username:     username,
+		PasswordHash: hashedPassword,
+		CreatedAt:    now,
+		UpdatedAt:    now,
 	}, nil
 }
 
-func (u *User) SetHashedPassword(hashedPassword string) {
-	u.PasswordHash = hashedPassword
-	u.UpdatedAt = time.Now()
+func (u *User) Authenticate(rawPassword string) bool {
+	password := Password(rawPassword)
+	return password.Matches(u.PasswordHash)
 }
 
-func validatePassword(password string) error {
-	if password == "" || len(password) < 8 {
-		return ErrInvalidCredentials
-	}
-	return nil
-}
-
+// todo - use value object
 func validateUserName(username string) error {
 	if username == "" {
 		return ErrInvalidCredentials
