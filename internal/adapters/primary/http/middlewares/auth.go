@@ -14,7 +14,7 @@ import (
 )
 
 func RequireJWTAuth(
-	tokenManager outbound.TokenGeneratorValidator,
+	tokenValidator outbound.TokenValidator,
 	tokenRepo outbound.TokenRepository,
 	userRepo outbound.UserRepository,
 	responder response.Responder,
@@ -30,7 +30,7 @@ func RequireJWTAuth(
 				return
 			}
 
-			userID, err := tokenManager.Validate(accessToken)
+			userID, err := tokenValidator.Validate(accessToken)
 			if err != nil {
 				responder.RespondWithError(w, http.StatusUnauthorized, "Unauthorized: invalid token", err)
 				return
