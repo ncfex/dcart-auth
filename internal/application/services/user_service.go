@@ -21,8 +21,8 @@ func NewUserService(
 	}
 }
 
-func (s *userService) CreateUser(ctx context.Context, username, password string) (*userDomain.User, error) {
-	_, err := s.userRepo.GetByUsername(ctx, username)
+func (us *userService) CreateUser(ctx context.Context, username, password string) (*userDomain.User, error) {
+	_, err := us.userRepo.GetByUsername(ctx, username)
 	if err == nil {
 		return nil, fmt.Errorf("get user username: %w", userDomain.ErrUserAlreadyExists)
 	}
@@ -35,14 +35,14 @@ func (s *userService) CreateUser(ctx context.Context, username, password string)
 		return nil, fmt.Errorf("new user: %w", err)
 	}
 
-	if err := s.userRepo.Add(ctx, user); err != nil {
+	if err := us.userRepo.Add(ctx, user); err != nil {
 		return nil, fmt.Errorf("create user: %w", err)
 	}
 	return user, nil
 }
 
-func (s *userService) ValidateWithCreds(ctx context.Context, username, password string) (*userDomain.User, error) {
-	user, err := s.userRepo.GetByUsername(ctx, username)
+func (us *userService) ValidateWithCreds(ctx context.Context, username, password string) (*userDomain.User, error) {
+	user, err := us.userRepo.GetByUsername(ctx, username)
 	if err != nil {
 		return nil, fmt.Errorf("get user username: %w", err)
 	}
@@ -53,8 +53,8 @@ func (s *userService) ValidateWithCreds(ctx context.Context, username, password 
 	return user, nil
 }
 
-func (s *userService) ValidateWithID(ctx context.Context, userID string) (*userDomain.User, error) {
-	user, err := s.userRepo.GetByID(ctx, userID)
+func (us *userService) ValidateWithID(ctx context.Context, userID string) (*userDomain.User, error) {
+	user, err := us.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get user id: %w", err)
 	}

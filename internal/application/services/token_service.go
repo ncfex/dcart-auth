@@ -28,13 +28,13 @@ func NewTokenService(
 	}
 }
 
-func (svc *tokenService) CreateTokenPair(ctx context.Context, params inbound.CreateTokenParams) (tokenDomain.TokenPair, error) {
-	accessTokenString, err := svc.CreateAccessToken(params)
+func (ts *tokenService) CreateTokenPair(ctx context.Context, params inbound.CreateTokenParams) (tokenDomain.TokenPair, error) {
+	accessTokenString, err := ts.CreateAccessToken(params)
 	if err != nil {
 		return token.TokenPair{}, fmt.Errorf("create access token: %w", err)
 	}
 
-	refreshToken, err := svc.CreateRefreshToken(ctx, params)
+	refreshToken, err := ts.CreateRefreshToken(ctx, params)
 	if err != nil {
 		return token.TokenPair{}, fmt.Errorf("create refresh token: %w", err)
 	}
@@ -45,16 +45,16 @@ func (svc *tokenService) CreateTokenPair(ctx context.Context, params inbound.Cre
 }
 
 // at
-func (svc *tokenService) CreateAccessToken(params inbound.CreateTokenParams) (string, error) {
-	accessTokenString, err := svc.accessTokenGen.Generate(params.UserID)
+func (ts *tokenService) CreateAccessToken(params inbound.CreateTokenParams) (string, error) {
+	accessTokenString, err := ts.accessTokenGen.Generate(params.UserID)
 	if err != nil {
 		return "", fmt.Errorf("access token generate: %w", err)
 	}
 	return accessTokenString, nil
 }
 
-func (svc *tokenService) ValidateAccessToken(tokenString string) (string, error) {
-	subjectString, err := svc.accessTokenGen.Validate(tokenString)
+func (ts *tokenService) ValidateAccessToken(tokenString string) (string, error) {
+	subjectString, err := ts.accessTokenGen.Validate(tokenString)
 	if err != nil {
 		return "", fmt.Errorf("access token validate: %w", err)
 	}
@@ -62,11 +62,8 @@ func (svc *tokenService) ValidateAccessToken(tokenString string) (string, error)
 }
 
 // rt
-func (svc *tokenService) CreateRefreshToken(
-	ctx context.Context,
-	params inbound.CreateTokenParams,
-) (*tokenDomain.RefreshToken, error) {
-	refreshTokenString, err := svc.refreshTokenGen.Generate("")
+func (ts *tokenService) CreateRefreshToken(ctx context.Context, params inbound.CreateTokenParams) (*tokenDomain.RefreshToken, error) {
+	refreshTokenString, err := ts.refreshTokenGen.Generate("")
 	if err != nil {
 		return nil, fmt.Errorf("refresh token generate: %w", err)
 	}
@@ -76,14 +73,14 @@ func (svc *tokenService) CreateRefreshToken(
 		return nil, fmt.Errorf("new refresh token: %w", err)
 	}
 
-	if err := svc.tokenRepo.Add(ctx, refreshToken); err != nil {
+	if err := ts.tokenRepo.Add(ctx, refreshToken); err != nil {
 		return nil, fmt.Errorf("store token: %w", err)
 	}
 	return refreshToken, nil
 }
 
-func (svc *tokenService) ValidateRefreshToken(ctx context.Context, tokenString string) (*token.RefreshToken, error) {
-	refreshToken, err := svc.tokenRepo.GetByToken(ctx, tokenString)
+func (ts *tokenService) ValidateRefreshToken(ctx context.Context, tokenString string) (*token.RefreshToken, error) {
+	refreshToken, err := ts.tokenRepo.GetByToken(ctx, tokenString)
 	if err != nil {
 		return nil, fmt.Errorf("get token string: %w", err)
 	}
@@ -94,14 +91,14 @@ func (svc *tokenService) ValidateRefreshToken(ctx context.Context, tokenString s
 	return refreshToken, nil
 }
 
-func (svc *tokenService) RevokeRefreshToken(ctx context.Context, tokenString string) error {
-	token, err := svc.tokenRepo.GetByToken(ctx, tokenString)
+func (ts *tokenService) RevokeRefreshToken(ctx context.Context, tokenString string) error {
+	token, err := ts.tokenRepo.GetByToken(ctx, tokenString)
 	if err != nil {
 		return fmt.Errorf("get token string: %w", err)
 	}
 
 	token.Revoke()
-	if err := svc.tokenRepo.Save(ctx, token); err != nil {
+	if err := ts.tokenRepo.Save(ctx, token); err != nil {
 		return fmt.Errorf("save token: %w", err)
 	}
 	return nil

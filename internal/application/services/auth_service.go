@@ -9,31 +9,31 @@ import (
 	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
 
-type service struct {
-	userService  inbound.UserSevice
-	tokenService inbound.TokenService
+type authService struct {
+	userSvc  inbound.UserSevice
+	tokenSvc inbound.TokenService
 }
 
 func NewAuthService(
-	userService inbound.UserSevice,
-	tokenService inbound.TokenService,
-) *service {
-	return &service{
-		userService:  userService,
-		tokenService: tokenService,
+	userSvc inbound.UserSevice,
+	tokenSvc inbound.TokenService,
+) inbound.AuthenticationService {
+	return &authService{
+		userSvc:  userSvc,
+		tokenSvc: tokenSvc,
 	}
 }
 
-func (s *service) Register(ctx context.Context, username, password string) (*userDomain.User, error) {
-	user, err := s.userService.CreateUser(ctx, username, password)
+func (as *authService) Register(ctx context.Context, username, password string) (*userDomain.User, error) {
+	user, err := as.userSvc.CreateUser(ctx, username, password)
 	if err != nil {
 		return nil, fmt.Errorf("create user: %w", err)
 	}
 	return user, nil
 }
 
-func (s *service) Login(ctx context.Context, username, password string) (*tokenDomain.TokenPair, error) {
-	user, err := s.userService.ValidateWithCreds(ctx, username, password)
+func (as *authService) Login(ctx context.Context, username, password string) (*tokenDomain.TokenPair, error) {
+	user, err := as.userSvc.ValidateWithCreds(ctx, username, password)
 	if err != nil {
 		return nil, fmt.Errorf("validate with creds: %w", err)
 	}
@@ -41,7 +41,7 @@ func (s *service) Login(ctx context.Context, username, password string) (*tokenD
 	createTokenParams := inbound.CreateTokenParams{
 		UserID: user.ID,
 	}
-	tokenPair, err := s.tokenService.CreateTokenPair(ctx, createTokenParams)
+	tokenPair, err := as.tokenSvc.CreateTokenPair(ctx, createTokenParams)
 	if err != nil {
 		return nil, fmt.Errorf("create token pair: %w", err)
 	}
@@ -51,13 +51,13 @@ func (s *service) Login(ctx context.Context, username, password string) (*tokenD
 	}, nil
 }
 
-func (s *service) Refresh(ctx context.Context, tokenString string) (*tokenDomain.TokenPair, error) {
-	refreshToken, err := s.tokenService.ValidateRefreshToken(ctx, tokenString)
+func (as *authService) Refresh(ctx context.Context, tokenString string) (*tokenDomain.TokenPair, error) {
+	refreshToken, err := as.tokenSvc.ValidateRefreshToken(ctx, tokenString)
 	if err != nil {
 		return nil, fmt.Errorf("validate refresh token: %w", err)
 	}
 
-	user, err := s.userService.ValidateWithID(ctx, refreshToken.UserID)
+	user, err := as.userSvc.ValidateWithID(ctx, refreshToken.UserID)
 	if err != nil {
 		return nil, fmt.Errorf("validate with id: %w", err)
 	}
@@ -65,7 +65,7 @@ func (s *service) Refresh(ctx context.Context, tokenString string) (*tokenDomain
 	params := inbound.CreateTokenParams{
 		UserID: user.ID,
 	}
-	accessTokenString, err := s.tokenService.CreateAccessToken(params)
+	accessTokenString, err := as.tokenSvc.CreateAccessToken(params)
 	if err != nil {
 		return nil, fmt.Errorf("create access token: %w", err)
 	}
@@ -75,20 +75,20 @@ func (s *service) Refresh(ctx context.Context, tokenString string) (*tokenDomain
 	}, nil
 }
 
-func (s *service) Logout(ctx context.Context, tokenString string) error {
-	if err := s.tokenService.RevokeRefreshToken(ctx, tokenString); err != nil {
+func (as *authService) Logout(ctx context.Context, tokenString string) error {
+	if err := as.tokenSvc.RevokeRefreshToken(ctx, tokenString); err != nil {
 		return fmt.Errorf("revoke refresh token: %w", err)
 	}
 	return nil
 }
 
-func (s *service) Validate(ctx context.Context, token string) (*userDomain.User, error) {
-	userID, err := s.tokenService.ValidateAccessToken(token)
+func (as *authService) Validate(ctx context.Context, token string) (*userDomain.User, error) {
+	userID, err := as.tokenSvc.ValidateAccessToken(token)
 	if err != nil {
 		return nil, fmt.Errorf("validate access token: %w", err)
 	}
 
-	user, err := s.userService.ValidateWithID(ctx, userID)
+	user, err := as.userSvc.ValidateWithID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("validate with id: %w", err)
 	}
