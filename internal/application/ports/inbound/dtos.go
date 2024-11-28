@@ -10,29 +10,25 @@ type LoginRequest struct {
 	Password string `json:"password" validate:"required"`
 }
 
-type RefreshRequest struct {
-	TokenString string `json:"token_string" validate:"required"`
-}
-
-type LogoutRequest struct {
-	TokenString string `json:"token_string" validate:"required"`
-}
-
-type ValidateRequest struct {
-	TokenString string `json:"token_string" validate:"required"`
-}
-
-type UserResponse struct {
+type UserDTO struct {
 	ID       string `json:"id"`
 	Username string `json:"username"`
 }
 
-type ValidateResponse struct {
-	Valid bool         `json:"valid"`
-	User  UserResponse `json:"user"`
+type TokenRequest struct {
+	Token string `json:"token" validate:"required"`
 }
 
-type TokenPairResponse struct {
+type TokenPairDTO struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
+}
+
+type TokenDTO struct {
+	Token string `json:"token"`
+}
+
+type ValidateResponse struct {
+	Valid bool    `json:"valid"`
+	User  UserDTO `json:"user"`
 }
