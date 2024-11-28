@@ -8,12 +8,12 @@ import (
 )
 
 type authService struct {
-	userSvc  inbound.UserSevice
+	userSvc  inbound.UserService
 	tokenSvc inbound.TokenService
 }
 
 func NewAuthService(
-	userSvc inbound.UserSevice,
+	userSvc inbound.UserService,
 	tokenSvc inbound.TokenService,
 ) inbound.AuthenticationService {
 	return &authService{
@@ -22,21 +22,18 @@ func NewAuthService(
 	}
 }
 
-func (as *authService) Register(ctx context.Context, req inbound.RegisterRequest) (*inbound.UserResponse, error) {
-	user, err := as.userSvc.CreateUser(ctx, req.Username, req.Password)
+func (as *authService) Register(ctx context.Context, req inbound.RegisterRequest) (*inbound.UserDTO, error) {
+	user, err := as.userSvc.CreateUser(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("create user: %w", err)
 	}
-	return &inbound.UserResponse{
-		ID:       user.ID,
-		Username: user.Username,
-	}, nil
+	return user, nil
 }
 
-func (as *authService) Login(ctx context.Context, req inbound.LoginRequest) (*inbound.TokenPairResponse, error) {
-	user, err := as.userSvc.ValidateWithCreds(ctx, req.Username, req.Password)
+func (as *authService) Login(ctx context.Context, req inbound.LoginRequest) (*inbound.TokenPairDTO, error) {
+	user, err := as.userSvc.VerifyWithCreds(ctx, req)
 	if err != nil {
-		return nil, fmt.Errorf("validate with creds: %w", err)
+		return nil, fmt.Errorf("verify with creds: %w", err)
 	}
 
 	createTokenParams := inbound.CreateTokenParams{
@@ -46,56 +43,55 @@ func (as *authService) Login(ctx context.Context, req inbound.LoginRequest) (*in
 	if err != nil {
 		return nil, fmt.Errorf("create token pair: %w", err)
 	}
-	return &inbound.TokenPairResponse{
+	return &inbound.TokenPairDTO{
 		AccessToken:  tokenPair.AccessToken,
 		RefreshToken: tokenPair.RefreshToken,
 	}, nil
 }
 
-func (as *authService) Refresh(ctx context.Context, req inbound.RefreshRequest) (*inbound.TokenPairResponse, error) {
-	refreshToken, err := as.tokenSvc.ValidateRefreshToken(ctx, req.TokenString)
+func (as *authService) Refresh(ctx context.Context, req inbound.TokenRequest) (*inbound.TokenDTO, error) {
+	refreshToken, err := as.tokenSvc.ValidateRefreshToken(ctx, inbound.TokenRequest{Token: req.Token})
 	if err != nil {
 		return nil, fmt.Errorf("validate refresh token: %w", err)
 	}
 
-	user, err := as.userSvc.ValidateWithID(ctx, refreshToken.UserID)
+	user, err := as.userSvc.GetExistingUser(ctx, refreshToken.Subject)
 	if err != nil {
-		return nil, fmt.Errorf("validate with id: %w", err)
+		return nil, fmt.Errorf("get existing user : %w", err)
 	}
 
 	params := inbound.CreateTokenParams{
 		UserID: user.ID,
 	}
-	accessTokenString, err := as.tokenSvc.CreateAccessToken(params)
+	accessToken, err := as.tokenSvc.CreateAccessToken(params)
 	if err != nil {
 		return nil, fmt.Errorf("create access token: %w", err)
 	}
-	return &inbound.TokenPairResponse{
-		AccessToken:  accessTokenString,
-		RefreshToken: refreshToken.Token,
+	return &inbound.TokenDTO{
+		Token: accessToken.Token,
 	}, nil
 }
 
-func (as *authService) Logout(ctx context.Context, req inbound.LogoutRequest) error {
-	if err := as.tokenSvc.RevokeRefreshToken(ctx, req.TokenString); err != nil {
+func (as *authService) Logout(ctx context.Context, req inbound.TokenRequest) error {
+	if err := as.tokenSvc.RevokeRefreshToken(ctx, inbound.TokenRequest{Token: req.Token}); err != nil {
 		return fmt.Errorf("revoke refresh token: %w", err)
 	}
 	return nil
 }
 
-func (as *authService) Validate(ctx context.Context, req inbound.ValidateRequest) (*inbound.ValidateResponse, error) {
-	userID, err := as.tokenSvc.ValidateAccessToken(req.TokenString)
+func (as *authService) Validate(ctx context.Context, req inbound.TokenRequest) (*inbound.ValidateResponse, error) {
+	validateResp, err := as.tokenSvc.ValidateAccessToken(req)
 	if err != nil {
 		return nil, fmt.Errorf("validate access token: %w", err)
 	}
 
-	user, err := as.userSvc.ValidateWithID(ctx, userID)
+	user, err := as.userSvc.GetExistingUser(ctx, validateResp.Subject)
 	if err != nil {
-		return nil, fmt.Errorf("validate with id: %w", err)
+		return nil, fmt.Errorf("get existing user : %w", err)
 	}
 	return &inbound.ValidateResponse{
 		Valid: true,
-		User: inbound.UserResponse{
+		User: inbound.UserDTO{
 			ID:       user.ID,
 			Username: user.Username,
 		},

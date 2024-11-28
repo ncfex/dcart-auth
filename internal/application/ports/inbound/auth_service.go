@@ -5,9 +5,9 @@ import (
 )
 
 type AuthenticationService interface {
-	Register(ctx context.Context, req RegisterRequest) (*UserResponse, error)
-	Login(ctx context.Context, req LoginRequest) (*TokenPairResponse, error)
-	Refresh(ctx context.Context, req RefreshRequest) (*TokenPairResponse, error)
-	Logout(ctx context.Context, req LogoutRequest) error
-	Validate(ctx context.Context, req ValidateRequest) (*ValidateResponse, error)
+	Register(ctx context.Context, req RegisterRequest) (*UserDTO, error)
+	Login(ctx context.Context, req LoginRequest) (*TokenPairDTO, error)
+	Refresh(ctx context.Context, req TokenRequest) (*TokenDTO, error)
+	Logout(ctx context.Context, req TokenRequest) error
+	Validate(ctx context.Context, req TokenRequest) (*ValidateResponse, error)
 }

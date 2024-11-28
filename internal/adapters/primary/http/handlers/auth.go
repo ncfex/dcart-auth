@@ -47,8 +47,8 @@ func (h *handler) logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.authenticationService.Logout(r.Context(), inbound.LogoutRequest{
-		TokenString: refreshToken,
+	err = h.authenticationService.Logout(r.Context(), inbound.TokenRequest{
+		Token: refreshToken,
 	})
 	if err != nil {
 		h.responder.RespondWithError(w, http.StatusInternalServerError, err.Error(), err)

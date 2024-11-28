@@ -14,8 +14,8 @@ func (h *handler) refreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenPairResponse, err := h.authenticationService.Refresh(r.Context(), inbound.RefreshRequest{
-		TokenString: refreshToken,
+	tokenPairResponse, err := h.authenticationService.Refresh(r.Context(), inbound.TokenRequest{
+		Token: refreshToken,
 	})
 	if err != nil {
 		h.responder.RespondWithError(w, http.StatusUnauthorized, "not authorized", err)
@@ -32,8 +32,8 @@ func (h *handler) validateToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	validateResponse, err := h.authenticationService.Validate(r.Context(), inbound.ValidateRequest{
-		TokenString: accessToken,
+	validateResponse, err := h.authenticationService.Validate(r.Context(), inbound.TokenRequest{
+		Token: accessToken,
 	})
 	if err != nil {
 		h.responder.RespondWithError(w, http.StatusUnauthorized, "unauthorized", err)
