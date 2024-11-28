@@ -2,12 +2,10 @@ package inbound
 
 import (
 	"context"
-
-	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
 
-type UserSevice interface {
-	CreateUser(ctx context.Context, username, password string) (*userDomain.User, error)
-	ValidateWithCreds(ctx context.Context, username, password string) (*userDomain.User, error)
-	ValidateWithID(ctx context.Context, userID string) (*userDomain.User, error)
+type UserService interface {
+	CreateUser(ctx context.Context, req RegisterRequest) (*UserDTO, error)
+	VerifyWithCreds(ctx context.Context, req LoginRequest) (*UserDTO, error)
+	GetExistingUser(ctx context.Context, userID string) (*UserDTO, error)
 }
