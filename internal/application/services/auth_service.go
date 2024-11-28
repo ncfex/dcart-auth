@@ -5,8 +5,6 @@ import (
 	"fmt"
 
 	"github.com/ncfex/dcart-auth/internal/application/ports/inbound"
-	tokenDomain "github.com/ncfex/dcart-auth/internal/domain/token"
-	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
 
 type authService struct {
@@ -24,16 +22,19 @@ func NewAuthService(
 	}
 }
 
-func (as *authService) Register(ctx context.Context, username, password string) (*userDomain.User, error) {
-	user, err := as.userSvc.CreateUser(ctx, username, password)
+func (as *authService) Register(ctx context.Context, req inbound.RegisterRequest) (*inbound.UserResponse, error) {
+	user, err := as.userSvc.CreateUser(ctx, req.Username, req.Password)
 	if err != nil {
 		return nil, fmt.Errorf("create user: %w", err)
 	}
-	return user, nil
+	return &inbound.UserResponse{
+		ID:       user.ID,
+		Username: user.Username,
+	}, nil
 }
 
-func (as *authService) Login(ctx context.Context, username, password string) (*tokenDomain.TokenPair, error) {
-	user, err := as.userSvc.ValidateWithCreds(ctx, username, password)
+func (as *authService) Login(ctx context.Context, req inbound.LoginRequest) (*inbound.TokenPairResponse, error) {
+	user, err := as.userSvc.ValidateWithCreds(ctx, req.Username, req.Password)
 	if err != nil {
 		return nil, fmt.Errorf("validate with creds: %w", err)
 	}
@@ -45,14 +46,14 @@ func (as *authService) Login(ctx context.Context, username, password string) (*t
 	if err != nil {
 		return nil, fmt.Errorf("create token pair: %w", err)
 	}
-	return &tokenDomain.TokenPair{
+	return &inbound.TokenPairResponse{
 		AccessToken:  tokenPair.AccessToken,
 		RefreshToken: tokenPair.RefreshToken,
 	}, nil
 }
 
-func (as *authService) Refresh(ctx context.Context, tokenString string) (*tokenDomain.TokenPair, error) {
-	refreshToken, err := as.tokenSvc.ValidateRefreshToken(ctx, tokenString)
+func (as *authService) Refresh(ctx context.Context, req inbound.RefreshRequest) (*inbound.TokenPairResponse, error) {
+	refreshToken, err := as.tokenSvc.ValidateRefreshToken(ctx, req.TokenString)
 	if err != nil {
 		return nil, fmt.Errorf("validate refresh token: %w", err)
 	}
@@ -69,21 +70,21 @@ func (as *authService) Refresh(ctx context.Context, tokenString string) (*tokenD
 	if err != nil {
 		return nil, fmt.Errorf("create access token: %w", err)
 	}
-	return &tokenDomain.TokenPair{
+	return &inbound.TokenPairResponse{
 		AccessToken:  accessTokenString,
 		RefreshToken: refreshToken.Token,
 	}, nil
 }
 
-func (as *authService) Logout(ctx context.Context, tokenString string) error {
-	if err := as.tokenSvc.RevokeRefreshToken(ctx, tokenString); err != nil {
+func (as *authService) Logout(ctx context.Context, req inbound.LogoutRequest) error {
+	if err := as.tokenSvc.RevokeRefreshToken(ctx, req.TokenString); err != nil {
 		return fmt.Errorf("revoke refresh token: %w", err)
 	}
 	return nil
 }
 
-func (as *authService) Validate(ctx context.Context, token string) (*userDomain.User, error) {
-	userID, err := as.tokenSvc.ValidateAccessToken(token)
+func (as *authService) Validate(ctx context.Context, req inbound.ValidateRequest) (*inbound.ValidateResponse, error) {
+	userID, err := as.tokenSvc.ValidateAccessToken(req.TokenString)
 	if err != nil {
 		return nil, fmt.Errorf("validate access token: %w", err)
 	}
@@ -92,5 +93,11 @@ func (as *authService) Validate(ctx context.Context, token string) (*userDomain.
 	if err != nil {
 		return nil, fmt.Errorf("validate with id: %w", err)
 	}
-	return user, nil
+	return &inbound.ValidateResponse{
+		Valid: true,
+		User: inbound.UserResponse{
+			ID:       user.ID,
+			Username: user.Username,
+		},
+	}, nil
 }

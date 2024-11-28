@@ -3,49 +3,42 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/ncfex/dcart-auth/internal/application/ports/inbound"
 	"github.com/ncfex/dcart-auth/pkg/httputil/request"
 )
 
 func (h *handler) refreshToken(w http.ResponseWriter, r *http.Request) {
-	type response struct {
-		Token string `json:"token"`
-	}
-
 	refreshToken, err := request.GetBearerToken(r.Header)
 	if err != nil {
 		h.responder.RespondWithError(w, http.StatusUnauthorized, "not authorized", err)
 		return
 	}
 
-	tokenPair, err := h.authenticationService.Refresh(r.Context(), refreshToken)
+	tokenPairResponse, err := h.authenticationService.Refresh(r.Context(), inbound.RefreshRequest{
+		TokenString: refreshToken,
+	})
 	if err != nil {
 		h.responder.RespondWithError(w, http.StatusUnauthorized, "not authorized", err)
 		return
 	}
 
-	h.responder.RespondWithJSON(w, http.StatusOK, response{
-		Token: string(tokenPair.AccessToken),
-	})
+	h.responder.RespondWithJSON(w, http.StatusOK, tokenPairResponse)
 }
 
 func (h *handler) validateToken(w http.ResponseWriter, r *http.Request) {
-	token, err := request.GetBearerToken(r.Header)
+	accessToken, err := request.GetBearerToken(r.Header)
 	if err != nil {
 		h.responder.RespondWithError(w, http.StatusUnauthorized, "unauthorized", err)
 		return
 	}
 
-	user, err := h.authenticationService.Validate(r.Context(), token)
-	if err != nil {
-		h.responder.RespondWithError(w, http.StatusUnauthorized, "unauthorized", err)
-		return
-	}
-
-	h.responder.RespondWithJSON(w, http.StatusOK, map[string]interface{}{
-		"valid": true,
-		"user": map[string]interface{}{
-			"id":       user.ID,
-			"username": user.Username,
-		},
+	validateResponse, err := h.authenticationService.Validate(r.Context(), inbound.ValidateRequest{
+		TokenString: accessToken,
 	})
+	if err != nil {
+		h.responder.RespondWithError(w, http.StatusUnauthorized, "unauthorized", err)
+		return
+	}
+
+	h.responder.RespondWithJSON(w, http.StatusOK, validateResponse)
 }

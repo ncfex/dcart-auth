@@ -4,68 +4,40 @@ import (
 	"encoding/json"
 	"net/http"
 
-	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
+	"github.com/ncfex/dcart-auth/internal/application/ports/inbound"
 	"github.com/ncfex/dcart-auth/pkg/httputil/request"
 )
 
 func (h *handler) register(w http.ResponseWriter, r *http.Request) {
-	type parameters struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-	}
-	type response struct {
-		userDomain.User
-	}
-
-	params := parameters{}
-	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
+	var req inbound.RegisterRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.responder.RespondWithError(w, http.StatusBadRequest, "Invalid request", err)
 		return
 	}
 
-	createdUser, err := h.authenticationService.Register(r.Context(), params.Username, params.Password)
+	userResponse, err := h.authenticationService.Register(r.Context(), req)
 	if err != nil {
 		h.responder.RespondWithError(w, http.StatusBadRequest, err.Error(), err)
 		return
 	}
 
-	h.responder.RespondWithJSON(w, http.StatusCreated, response{
-		User: userDomain.User{
-			ID:           createdUser.ID,
-			Username:     createdUser.Username,
-			PasswordHash: createdUser.PasswordHash,
-			CreatedAt:    createdUser.CreatedAt,
-			UpdatedAt:    createdUser.UpdatedAt,
-		},
-	})
+	h.responder.RespondWithJSON(w, http.StatusCreated, userResponse)
 }
 
 func (h *handler) login(w http.ResponseWriter, r *http.Request) {
-	type parameters struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-	}
-	type response struct {
-		Token        string `json:"token"`
-		RefreshToken string `json:"refresh_token"`
-	}
-
-	params := parameters{}
-	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
+	var req inbound.LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.responder.RespondWithError(w, http.StatusBadRequest, "Invalid request", err)
 		return
 	}
 
-	tokenPair, err := h.authenticationService.Login(r.Context(), params.Username, params.Password)
+	tokenPairResponse, err := h.authenticationService.Login(r.Context(), req)
 	if err != nil {
 		h.responder.RespondWithError(w, http.StatusUnauthorized, err.Error(), err)
 		return
 	}
 
-	h.responder.RespondWithJSON(w, http.StatusOK, response{
-		Token:        string(tokenPair.AccessToken),
-		RefreshToken: string(tokenPair.RefreshToken),
-	})
+	h.responder.RespondWithJSON(w, http.StatusOK, tokenPairResponse)
 }
 
 func (h *handler) logout(w http.ResponseWriter, r *http.Request) {
@@ -75,7 +47,9 @@ func (h *handler) logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.authenticationService.Logout(r.Context(), refreshToken)
+	err = h.authenticationService.Logout(r.Context(), inbound.LogoutRequest{
+		TokenString: refreshToken,
+	})
 	if err != nil {
 		h.responder.RespondWithError(w, http.StatusInternalServerError, err.Error(), err)
 		return
