@@ -22,17 +22,14 @@ type ValidateRequest struct {
 	TokenString string `json:"token_string" validate:"required"`
 }
 
-type ValidateResponse struct {
-	Valid bool `json:"valid"`
-	User  struct {
-		ID       string `json:"id"`
-		Username string `json:"username"`
-	} `json:"user"`
-}
-
 type UserResponse struct {
 	ID       string `json:"id"`
 	Username string `json:"username"`
+}
+
+type ValidateResponse struct {
+	Valid bool         `json:"valid"`
+	User  UserResponse `json:"user"`
 }
 
 type TokenPairResponse struct {
