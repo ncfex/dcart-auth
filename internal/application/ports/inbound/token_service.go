@@ -2,23 +2,25 @@ package inbound
 
 import (
 	"context"
-
-	"github.com/ncfex/dcart-auth/internal/domain/token"
 )
 
 type CreateTokenParams struct {
-	UserID string
+	UserID string `json:"user_id" validate:"required"`
+}
+
+type ValidateTokenResponse struct {
+	Subject string
 }
 
 type TokenService interface {
-	CreateTokenPair(ctx context.Context, params CreateTokenParams) (tokenPair token.TokenPair, err error)
+	CreateTokenPair(ctx context.Context, r CreateTokenParams) (*TokenPairDTO, error)
 
 	// at
-	CreateAccessToken(params CreateTokenParams) (tokenString string, err error)
-	ValidateAccessToken(tokenString string) (subjectString string, err error)
+	CreateAccessToken(r CreateTokenParams) (*TokenDTO, error)
+	ValidateAccessToken(r TokenRequest) (*ValidateTokenResponse, error)
 
 	// rt
-	CreateRefreshToken(ctx context.Context, params CreateTokenParams) (refreshToken *token.RefreshToken, err error)
-	ValidateRefreshToken(ctx context.Context, tokenString string) (refreshToken *token.RefreshToken, err error)
-	RevokeRefreshToken(ctx context.Context, tokenString string) error
+	CreateRefreshToken(ctx context.Context, r CreateTokenParams) (*TokenDTO, error)
+	ValidateRefreshToken(ctx context.Context, r TokenRequest) (*ValidateTokenResponse, error)
+	RevokeRefreshToken(ctx context.Context, r TokenRequest) error
 }
