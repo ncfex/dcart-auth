@@ -5,6 +5,7 @@ import (
 
 	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
 	"github.com/ncfex/dcart-auth/internal/application/queries"
+	"github.com/ncfex/dcart-auth/internal/domain/shared"
 	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
 
@@ -28,7 +29,11 @@ func (h *userQueryHandler) HandleGetUserById(ctx context.Context, query queries.
 		return nil, userDomain.ErrUserNotFound
 	}
 
-	user := &userDomain.User{}
+	user := &userDomain.User{
+		BaseAggregateRoot: shared.BaseAggregateRoot{
+			Changes: []shared.Event{},
+		},
+	}
 	for _, event := range events {
 		user.Apply(event)
 	}
@@ -46,7 +51,11 @@ func (h *userQueryHandler) HandleGetUserByUsername(ctx context.Context, query qu
 		return nil, userDomain.ErrUserNotFound
 	}
 
-	user := &userDomain.User{}
+	user := &userDomain.User{
+		BaseAggregateRoot: shared.BaseAggregateRoot{
+			Changes: []shared.Event{},
+		},
+	}
 	for _, event := range events {
 		user.Apply(event)
 	}

@@ -66,6 +66,9 @@ func validateUserName(username string) error {
 }
 
 func (u *User) Apply(event shared.Event) {
+	u.ID = event.GetAggregateID()
+	u.Version = event.GetVersion()
+
 	switch event.GetEventType() {
 	case "USER_REGISTERED":
 		payload := event.GetPayload().(UserRegisteredEventPayload)
@@ -78,5 +81,4 @@ func (u *User) Apply(event shared.Event) {
 		u.PasswordHash = payload.NewPasswordHash
 		u.UpdatedAt = event.GetTimestamp()
 	}
-	u.Version = event.GetVersion()
 }
