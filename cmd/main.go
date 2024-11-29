@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/handlers"
+	"github.com/ncfex/dcart-auth/internal/adapters/secondary/memory"
 	"github.com/ncfex/dcart-auth/internal/adapters/secondary/postgres"
 	"github.com/ncfex/dcart-auth/internal/application/services"
 
@@ -40,17 +41,22 @@ func main() {
 	defer db.Close()
 
 	// repo
-	userRepo := postgres.NewUserRepository(db)
+	// userRepo := postgres.NewUserRepository(db)
 	tokenRepo := postgres.NewTokenRepository(db, 24*7*time.Hour)
+	eventStore := memory.NewInMemoryEventStore()
+
+	// cqrs
+	userCommandHandler := services.NewUserCommandHandler(eventStore)
+	userQueryHandler := services.NewUserQueryHandler(eventStore)
 
 	jwtManager := jwt.NewJWTService("dcart", cfg.JwtSecret, time.Minute*15)
 	refreshTokenGenerator := refresh.NewHexRefreshGenerator("dc_", 32)
 
 	// app
-	userSvc := services.NewUserService(userRepo)
 	tokenSvc := services.NewTokenService(jwtManager, refreshTokenGenerator, tokenRepo)
 	authService := services.NewAuthService(
-		userSvc,
+		userCommandHandler,
+		userQueryHandler,
 		tokenSvc,
 	)
 
@@ -63,7 +69,7 @@ func main() {
 		authService,
 		jwtManager,
 		tokenRepo,
-		userRepo,
+		eventStore,
 	)
 
 	srv := &http.Server{

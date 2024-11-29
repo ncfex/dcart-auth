@@ -4,40 +4,72 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ncfex/dcart-auth/internal/application/commands"
 	"github.com/ncfex/dcart-auth/internal/application/ports/inbound"
+	"github.com/ncfex/dcart-auth/internal/application/queries"
+	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
 
 type authService struct {
-	userSvc  inbound.UserService
-	tokenSvc inbound.TokenService
+	userCommandHandler inbound.UserCommandHandler
+	userQueryHandler   inbound.UserQueryHandler
+	tokenSvc           inbound.TokenService
 }
 
 func NewAuthService(
-	userSvc inbound.UserService,
+	userCommandHandler inbound.UserCommandHandler,
+	userQueryHandler inbound.UserQueryHandler,
 	tokenSvc inbound.TokenService,
 ) inbound.AuthenticationService {
 	return &authService{
-		userSvc:  userSvc,
-		tokenSvc: tokenSvc,
+		userCommandHandler: userCommandHandler,
+		userQueryHandler:   userQueryHandler,
+		tokenSvc:           tokenSvc,
 	}
 }
 
 func (as *authService) Register(ctx context.Context, req inbound.RegisterRequest) (*inbound.UserDTO, error) {
-	user, err := as.userSvc.CreateUser(ctx, req)
-	if err != nil {
-		return nil, fmt.Errorf("create user: %w", err)
+	if _, err := as.userQueryHandler.HandleGetUserByUsername(ctx, queries.GetUserByUsernameQuery{
+		Username: req.Username,
+	}); err == nil {
+		return nil, fmt.Errorf("get user username: %w", userDomain.ErrUserAlreadyExists)
+	} else if err != userDomain.ErrUserNotFound {
+		return nil, fmt.Errorf("get user username: %w", err)
 	}
-	return user, nil
+
+	registerCommand := commands.RegisterUserCommand{
+		Username: req.Username,
+		Password: req.Password,
+	}
+	user, err := as.userCommandHandler.HandleRegisterUser(ctx, registerCommand)
+	if err != nil {
+		return nil, fmt.Errorf("register user: %w", err)
+	}
+
+	return &inbound.UserDTO{
+		ID:       user.ID,
+		Username: user.Username,
+	}, nil
 }
 
 func (as *authService) Login(ctx context.Context, req inbound.LoginRequest) (*inbound.TokenPairDTO, error) {
-	user, err := as.userSvc.VerifyWithCreds(ctx, req)
+	existingUser, err := as.userQueryHandler.HandleGetUserByUsername(ctx, queries.GetUserByUsernameQuery{
+		Username: req.Username,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("verify with creds: %w", err)
+		return nil, fmt.Errorf("get user username: %w", err)
+	}
+	if existingUser == nil {
+		return nil, fmt.Errorf("user not found")
+	}
+
+	correct := existingUser.Authenticate(req.Password)
+	if !correct {
+		return nil, fmt.Errorf("wrong password")
 	}
 
 	createTokenParams := inbound.CreateTokenParams{
-		UserID: user.ID,
+		UserID: existingUser.GetID(),
 	}
 	tokenPair, err := as.tokenSvc.CreateTokenPair(ctx, createTokenParams)
 	if err != nil {
@@ -55,7 +87,10 @@ func (as *authService) Refresh(ctx context.Context, req inbound.TokenRequest) (*
 		return nil, fmt.Errorf("validate refresh token: %w", err)
 	}
 
-	user, err := as.userSvc.GetExistingUser(ctx, refreshToken.Subject)
+	getUserByIdQuery := queries.GetUserByIDQuery{
+		UserID: refreshToken.Subject,
+	}
+	user, err := as.userQueryHandler.HandleGetUserById(ctx, getUserByIdQuery)
 	if err != nil {
 		return nil, fmt.Errorf("get existing user : %w", err)
 	}
@@ -85,7 +120,10 @@ func (as *authService) Validate(ctx context.Context, req inbound.TokenRequest) (
 		return nil, fmt.Errorf("validate access token: %w", err)
 	}
 
-	user, err := as.userSvc.GetExistingUser(ctx, validateResp.Subject)
+	getUserByIdQuery := queries.GetUserByIDQuery{
+		UserID: validateResp.Subject,
+	}
+	user, err := as.userQueryHandler.HandleGetUserById(ctx, getUserByIdQuery)
 	if err != nil {
 		return nil, fmt.Errorf("get existing user : %w", err)
 	}
