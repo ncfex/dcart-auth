@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/ncfex/dcart-auth/internal/domain/shared"
 )
 
 var (
@@ -15,11 +16,12 @@ var (
 )
 
 type User struct {
-	ID           string    `json:"id"`
-	Username     string    `json:"username"`
-	PasswordHash string    `json:"-"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	shared.BaseAggregateRoot
+	ID           string // todo remove this field
+	Username     string
+	PasswordHash string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 func NewUser(username, rawPassword string) (*User, error) {
@@ -37,14 +39,18 @@ func NewUser(username, rawPassword string) (*User, error) {
 		return nil, err
 	}
 
-	now := time.Now()
-	return &User{
-		ID:           uuid.New().String(),
-		Username:     username,
-		PasswordHash: hashedPassword,
-		CreatedAt:    now,
-		UpdatedAt:    now,
-	}, nil
+	user := &User{
+		BaseAggregateRoot: shared.BaseAggregateRoot{
+			BaseID:  uuid.New().String(),
+			Version: 0,
+		},
+	}
+
+	event := NewUserRegisteredEvent(user.ID, username, hashedPassword)
+	user.Apply(event)
+	user.Changes = append(user.Changes, event)
+
+	return user, nil
 }
 
 func (u *User) Authenticate(rawPassword string) bool {
@@ -58,4 +64,20 @@ func validateUserName(username string) error {
 		return ErrInvalidCredentials
 	}
 	return nil
+}
+
+func (u *User) Apply(event shared.Event) {
+	switch event.GetEventType() {
+	case "USER_REGISTERED":
+		payload := event.GetPayload().(UserRegisteredEventPayload)
+		u.Username = payload.Username
+		u.PasswordHash = payload.PasswordHash
+		u.CreatedAt = event.GetTimestamp()
+		u.UpdatedAt = event.GetTimestamp()
+	case "USER_PASSWORD_CHANGED":
+		payload := event.GetPayload().(UserPasswordChangedEventPayload)
+		u.PasswordHash = payload.NewPasswordHash
+		u.UpdatedAt = event.GetTimestamp()
+	}
+	u.Version = event.GetVersion()
 }
