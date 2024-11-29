@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/ncfex/dcart-auth/internal/domain/shared"
 	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 	"github.com/ncfex/dcart-auth/pkg/httputil/request"
 )
@@ -20,8 +21,6 @@ func (h *handler) profile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.responder.RespondWithJSON(w, http.StatusOK, response{
-		User: userDomain.User{
-			ID: *userID,
-		},
+		User: userDomain.User{BaseAggregateRoot: shared.BaseAggregateRoot{ID: *userID}},
 	})
 }

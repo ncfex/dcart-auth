@@ -17,7 +17,6 @@ var (
 
 type User struct {
 	shared.BaseAggregateRoot
-	ID           string // todo remove this field
 	Username     string
 	PasswordHash string
 	CreatedAt    time.Time
@@ -41,7 +40,7 @@ func NewUser(username, rawPassword string) (*User, error) {
 
 	user := &User{
 		BaseAggregateRoot: shared.BaseAggregateRoot{
-			BaseID:  uuid.New().String(),
+			ID:      uuid.New().String(),
 			Version: 0,
 		},
 	}

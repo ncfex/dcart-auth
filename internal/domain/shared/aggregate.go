@@ -9,12 +9,12 @@ type AggregateRoot interface {
 }
 
 type BaseAggregateRoot struct {
-	BaseID  string
+	ID      string
 	Version int
 	Changes []Event
 }
 
-func (a *BaseAggregateRoot) GetID() string                  { return a.BaseID }
+func (a *BaseAggregateRoot) GetID() string                  { return a.ID }
 func (a *BaseAggregateRoot) GetVersion() int                { return a.Version }
 func (a *BaseAggregateRoot) GetUncommittedChanges() []Event { return a.Changes }
 func (a *BaseAggregateRoot) ClearUncommittedChanges()       { a.Changes = []Event{} }
