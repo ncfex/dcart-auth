@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/ncfex/dcart-auth/internal/domain/shared"
+	"github.com/ncfex/dcart-auth/internal/domain/user"
 )
 
 type InMemoryEventStore struct {
@@ -71,6 +72,25 @@ func (s *InMemoryEventStore) GetEventsByType(ctx context.Context, aggregateType 
 	}
 
 	return result, nil
+}
+
+func (s *InMemoryEventStore) GetEventsByUsername(ctx context.Context, username string) ([]shared.Event, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	for _, events := range s.events {
+		for _, event := range events {
+			if event.GetEventType() == "USER_REGISTERED" {
+				if payload, ok := event.GetPayload().(user.UserRegisteredEventPayload); ok {
+					if payload.Username == username {
+						return s.events[event.GetAggregateID()], nil
+					}
+				}
+			}
+		}
+	}
+
+	return []shared.Event{}, nil
 }
 
 // testing
