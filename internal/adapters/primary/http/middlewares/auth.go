@@ -13,10 +13,9 @@ import (
 	"github.com/ncfex/dcart-auth/pkg/middleware"
 )
 
+// todo improve
 func RequireJWTAuth(
 	tokenValidator outbound.TokenValidator,
-	tokenRepo outbound.TokenRepository,
-	userRepo outbound.UserRepository,
 	responder response.Responder,
 ) middleware.Middleware {
 	return func(next http.Handler) http.Handler {
@@ -36,18 +35,7 @@ func RequireJWTAuth(
 				return
 			}
 
-			user, err := userRepo.GetByID(ctx, userID)
-			if err != nil {
-				switch {
-				case errors.Is(err, context.DeadlineExceeded):
-					responder.RespondWithError(w, http.StatusGatewayTimeout, "Request timeout", err)
-				default:
-					responder.RespondWithError(w, http.StatusUnauthorized, "Unauthorized: user not found", err)
-				}
-				return
-			}
-
-			ctx = context.WithValue(ctx, request.ContextUserKey, user)
+			ctx = context.WithValue(ctx, request.ContextUserKey, userID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -55,7 +43,6 @@ func RequireJWTAuth(
 
 func RequireRefreshToken(
 	tokenRepo outbound.TokenRepository,
-	userRepo outbound.UserRepository,
 	responder response.Responder,
 ) middleware.Middleware {
 	return func(next http.Handler) http.Handler {
@@ -69,7 +56,7 @@ func RequireRefreshToken(
 				return
 			}
 
-			user, err := tokenRepo.GetUserByToken(ctx, refreshToken)
+			token, err := tokenRepo.GetByToken(ctx, refreshToken)
 			if err != nil {
 				switch {
 				case errors.Is(err, context.DeadlineExceeded):
@@ -80,7 +67,7 @@ func RequireRefreshToken(
 				return
 			}
 
-			ctx = context.WithValue(ctx, request.ContextUserKey, user)
+			ctx = context.WithValue(ctx, request.ContextUserKey, token.UserID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

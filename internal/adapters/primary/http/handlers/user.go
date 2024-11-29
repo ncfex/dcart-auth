@@ -7,12 +7,13 @@ import (
 	"github.com/ncfex/dcart-auth/pkg/httputil/request"
 )
 
+// todo improve
 func (h *handler) profile(w http.ResponseWriter, r *http.Request) {
 	type response struct {
 		User userDomain.User `json:"user"`
 	}
 
-	user, exists := request.GetDataFromContext[userDomain.User](r.Context(), request.ContextUserKey)
+	userID, exists := request.GetDataFromContext[string](r.Context(), request.ContextUserKey)
 	if !exists {
 		h.responder.RespondWithError(w, http.StatusNotFound, userDomain.ErrUserNotFound.Error(), userDomain.ErrUserNotFound)
 		return
@@ -20,10 +21,7 @@ func (h *handler) profile(w http.ResponseWriter, r *http.Request) {
 
 	h.responder.RespondWithJSON(w, http.StatusOK, response{
 		User: userDomain.User{
-			ID:        user.ID,
-			Username:  user.Username,
-			CreatedAt: user.CreatedAt,
-			UpdatedAt: user.UpdatedAt,
+			ID: *userID,
 		},
 	})
 }
