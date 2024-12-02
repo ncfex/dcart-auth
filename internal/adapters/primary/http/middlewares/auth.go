@@ -67,6 +67,11 @@ func RequireRefreshToken(
 				return
 			}
 
+			if err = token.IsValid(); err != nil {
+				responder.RespondWithError(w, http.StatusUnauthorized, "Unauthorized: invalid refresh token", err)
+				return
+			}
+
 			ctx = context.WithValue(ctx, request.ContextUserKey, token.UserID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
