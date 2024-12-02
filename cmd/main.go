@@ -79,6 +79,12 @@ func main() {
 	srv := &http.Server{
 		Addr:    ":" + cfg.Port,
 		Handler: handler.RegisterRoutes(),
+
+		// timeout
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       60 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	stopSignal := make(chan os.Signal, 1)
