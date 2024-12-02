@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 	"time"
 
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/handlers"
@@ -77,8 +81,40 @@ func main() {
 		Handler: handler.RegisterRoutes(),
 	}
 
-	log.Printf("starting auth service on port %s", cfg.Port)
-	if err := srv.ListenAndServe(); err != nil {
-		log.Fatalf("could not start server: %v", err)
+	stopSignal := make(chan os.Signal, 1)
+	signal.Notify(stopSignal, syscall.SIGINT, syscall.SIGTERM)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+		log.Printf("starting auth service on port %s", cfg.Port)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("could not start server: %v", err)
+		}
+	}()
+
+	<-stopSignal
+	log.Println("shutting down")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Printf("http server shutting down: %v", err)
+	}
+
+	waitCh := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(waitCh)
+	}()
+
+	select {
+	case <-waitCh:
+		log.Println("server stopped gracefully")
+	case <-ctx.Done():
+		log.Println("shutdown timed out")
 	}
 }
