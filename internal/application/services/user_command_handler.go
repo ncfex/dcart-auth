@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 
+	"github.com/ncfex/dcart-auth/internal/application/commands"
 	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
 	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
@@ -17,7 +18,7 @@ func NewUserCommandHandler(eventStore outbound.EventStore) *userCommandHandler {
 	}
 }
 
-func (h *userCommandHandler) HandleRegisterUser(ctx context.Context, cmd userDomain.RegisterUserCommand) (*userDomain.User, error) {
+func (h *userCommandHandler) HandleRegisterUser(ctx context.Context, cmd commands.RegisterUserCommand) (*userDomain.User, error) {
 	user, err := userDomain.NewUser(cmd.Username, cmd.Password)
 	if err != nil {
 		return nil, err

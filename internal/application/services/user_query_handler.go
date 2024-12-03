@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
+	"github.com/ncfex/dcart-auth/internal/application/queries"
 	"github.com/ncfex/dcart-auth/internal/domain/shared"
 	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
@@ -18,7 +19,7 @@ func NewUserQueryHandler(eventStore outbound.EventStore) *userQueryHandler {
 	}
 }
 
-func (h *userQueryHandler) HandleGetUserById(ctx context.Context, query userDomain.GetUserByIDQuery) (*userDomain.User, error) {
+func (h *userQueryHandler) HandleGetUserById(ctx context.Context, query queries.GetUserByIDQuery) (*userDomain.User, error) {
 	events, err := h.eventStore.GetEvents(ctx, query.UserID)
 	if err != nil {
 		return nil, err
@@ -40,7 +41,7 @@ func (h *userQueryHandler) HandleGetUserById(ctx context.Context, query userDoma
 	return user, nil
 }
 
-func (h *userQueryHandler) HandleGetUserByUsername(ctx context.Context, query userDomain.GetUserByUsernameQuery) (*userDomain.User, error) {
+func (h *userQueryHandler) HandleGetUserByUsername(ctx context.Context, query queries.GetUserByUsernameQuery) (*userDomain.User, error) {
 	events, err := h.eventStore.GetEventsByUsername(ctx, query.Username)
 	if err != nil {
 		return nil, err

@@ -1,4 +1,4 @@
-package user
+package commands
 
 type RegisterUserCommand struct {
 	Username string
