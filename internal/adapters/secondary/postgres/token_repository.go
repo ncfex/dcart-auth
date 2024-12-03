@@ -65,18 +65,6 @@ func (r *tokenRepository) GetByToken(ctx context.Context, tokenString string) (*
 	return db.ToRefreshTokenDomain(&refreshToken), nil
 }
 
-func (r *tokenRepository) GetUserByToken(ctx context.Context, tokenString string) (*userDomain.User, error) {
-	user, err := r.queries.GetUserFromRefreshToken(ctx, tokenString)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, tokenDomain.ErrTokenNotFound
-		}
-		return nil, errors.Join(ErrValidatingToken, err)
-	}
-
-	return db.ToUserDomain(&user), nil
-}
-
 func (r *tokenRepository) Revoke(ctx context.Context, tokenString string) error {
 	_, err := r.queries.RevokeRefreshToken(ctx, tokenString)
 	if err != nil {

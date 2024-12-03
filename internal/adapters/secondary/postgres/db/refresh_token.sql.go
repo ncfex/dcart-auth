@@ -66,27 +66,6 @@ func (q *Queries) GetTokenByTokenString(ctx context.Context, token string) (Refr
 	return i, err
 }
 
-const getUserFromRefreshToken = `-- name: GetUserFromRefreshToken :one
-SELECT users.id, users.username, users.password_hash, users.created_at, users.updated_at FROM users
-JOIN refresh_tokens ON users.id = refresh_tokens.user_id
-WHERE refresh_tokens.token = $1
-AND revoked_at IS NULL
-AND expires_at > NOW() AT TIME ZONE 'UTC'
-`
-
-func (q *Queries) GetUserFromRefreshToken(ctx context.Context, token string) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUserFromRefreshToken, token)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.Username,
-		&i.PasswordHash,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
 const revokeRefreshToken = `-- name: RevokeRefreshToken :one
 UPDATE refresh_tokens SET
     revoked_at = NOW() AT TIME ZONE 'UTC',

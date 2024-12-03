@@ -6,17 +6,11 @@ package db
 
 import (
 	"context"
-
-	"github.com/google/uuid"
 )
 
 type Querier interface {
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error)
-	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	GetTokenByTokenString(ctx context.Context, token string) (RefreshToken, error)
-	GetUserByID(ctx context.Context, id uuid.UUID) (User, error)
-	GetUserByUsername(ctx context.Context, username string) (User, error)
-	GetUserFromRefreshToken(ctx context.Context, token string) (User, error)
 	RevokeRefreshToken(ctx context.Context, token string) (RefreshToken, error)
 	SaveToken(ctx context.Context, arg SaveTokenParams) error
 }

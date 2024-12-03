@@ -3,22 +3,10 @@ package db
 import (
 	"time"
 
-	"github.com/ncfex/dcart-auth/internal/domain/shared"
 	tokenDomain "github.com/ncfex/dcart-auth/internal/domain/token"
-	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
 
 // todo improve
-func ToUserDomain(dbUser *User) *userDomain.User {
-	return &userDomain.User{
-		BaseAggregateRoot: shared.BaseAggregateRoot{ID: dbUser.ID.String()},
-		Username:          dbUser.Username,
-		PasswordHash:      dbUser.PasswordHash,
-		CreatedAt:         dbUser.CreatedAt,
-		UpdatedAt:         dbUser.UpdatedAt,
-	}
-}
-
 func ToRefreshTokenDomain(dbToken *RefreshToken) *tokenDomain.RefreshToken {
 	var revokedAt time.Time
 	if dbToken.RevokedAt.Valid {

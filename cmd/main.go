@@ -44,8 +44,7 @@ func main() {
 	}
 	defer db.Close()
 
-	// repo
-	// userRepo := postgres.NewUserRepository(db)
+	// persist
 	tokenRepo := postgres.NewTokenRepository(db, 24*7*time.Hour)
 	eventStore := memory.NewInMemoryEventStore()
 
