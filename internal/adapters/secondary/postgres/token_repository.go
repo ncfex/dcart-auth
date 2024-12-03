@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/ncfex/dcart-auth/internal/adapters/secondary/postgres/db"
-	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
+	"github.com/ncfex/dcart-auth/internal/application/ports/infra"
 	tokenDomain "github.com/ncfex/dcart-auth/internal/domain/token"
 	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
@@ -26,7 +26,7 @@ type tokenRepository struct {
 	expiresIn time.Duration
 }
 
-func NewTokenRepository(database *database, expiresIn time.Duration) outbound.TokenRepository {
+func NewTokenRepository(database *database, expiresIn time.Duration) infra.TokenRepository {
 	return &tokenRepository{
 		queries:   db.New(database.DB),
 		expiresIn: expiresIn,

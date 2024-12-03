@@ -3,17 +3,17 @@ package services
 import (
 	"context"
 
-	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
+	"github.com/ncfex/dcart-auth/internal/application/ports/infra"
 	"github.com/ncfex/dcart-auth/internal/application/queries"
 	"github.com/ncfex/dcart-auth/internal/domain/shared"
 	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
 
 type userQueryHandler struct {
-	eventStore outbound.EventStore
+	eventStore infra.EventStore
 }
 
-func NewUserQueryHandler(eventStore outbound.EventStore) *userQueryHandler {
+func NewUserQueryHandler(eventStore infra.EventStore) *userQueryHandler {
 	return &userQueryHandler{
 		eventStore: eventStore,
 	}

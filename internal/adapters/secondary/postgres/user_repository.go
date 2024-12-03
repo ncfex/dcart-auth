@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/ncfex/dcart-auth/internal/adapters/secondary/postgres/db"
-	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
+	"github.com/ncfex/dcart-auth/internal/application/ports/infra"
 	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
 
@@ -17,7 +17,7 @@ type userRepository struct {
 	queries *db.Queries
 }
 
-func NewUserRepository(database *database) outbound.UserRepository {
+func NewUserRepository(database *database) infra.UserRepository {
 	return &userRepository{
 		queries: db.New(database.DB),
 	}

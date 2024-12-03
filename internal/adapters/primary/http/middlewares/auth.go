@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ncfex/dcart-auth/internal/application/ports/infra"
 	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
 
 	"github.com/ncfex/dcart-auth/pkg/httputil/request"
@@ -42,7 +43,7 @@ func RequireJWTAuth(
 }
 
 func RequireRefreshToken(
-	tokenRepo outbound.TokenRepository,
+	tokenRepo infra.TokenRepository,
 	responder response.Responder,
 ) middleware.Middleware {
 	return func(next http.Handler) http.Handler {
