@@ -1,4 +1,4 @@
-package queries
+package user
 
 type GetUserByIDQuery struct {
 	UserID string
