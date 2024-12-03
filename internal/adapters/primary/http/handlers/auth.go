@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/ncfex/dcart-auth/internal/application/ports/inbound"
+	"github.com/ncfex/dcart-auth/internal/application/ports/types"
 	"github.com/ncfex/dcart-auth/pkg/httputil/request"
 )
 
 func (h *handler) register(w http.ResponseWriter, r *http.Request) {
-	var req inbound.RegisterRequest
+	var req types.RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.responder.RespondWithError(w, http.StatusBadRequest, "Invalid request", err)
 		return
@@ -25,7 +25,7 @@ func (h *handler) register(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) login(w http.ResponseWriter, r *http.Request) {
-	var req inbound.LoginRequest
+	var req types.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.responder.RespondWithError(w, http.StatusBadRequest, "Invalid request", err)
 		return
@@ -47,7 +47,7 @@ func (h *handler) logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.authenticationService.Logout(r.Context(), inbound.TokenRequest{
+	err = h.authenticationService.Logout(r.Context(), types.TokenRequest{
 		Token: refreshToken,
 	})
 	if err != nil {

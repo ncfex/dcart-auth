@@ -6,6 +6,7 @@ import (
 
 	"github.com/ncfex/dcart-auth/internal/application/commands"
 	"github.com/ncfex/dcart-auth/internal/application/ports/inbound"
+	"github.com/ncfex/dcart-auth/internal/application/ports/types"
 	"github.com/ncfex/dcart-auth/internal/application/queries"
 	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
@@ -28,7 +29,7 @@ func NewAuthService(
 	}
 }
 
-func (as *authService) Register(ctx context.Context, req inbound.RegisterRequest) (*inbound.UserDTO, error) {
+func (as *authService) Register(ctx context.Context, req types.RegisterRequest) (*types.UserResponse, error) {
 	if _, err := as.userQueryHandler.HandleGetUserByUsername(ctx, queries.GetUserByUsernameQuery{
 		Username: req.Username,
 	}); err == nil {
@@ -46,13 +47,13 @@ func (as *authService) Register(ctx context.Context, req inbound.RegisterRequest
 		return nil, fmt.Errorf("register user: %w", err)
 	}
 
-	return &inbound.UserDTO{
+	return &types.UserResponse{
 		ID:       user.ID,
 		Username: user.Username,
 	}, nil
 }
 
-func (as *authService) Login(ctx context.Context, req inbound.LoginRequest) (*inbound.TokenPairDTO, error) {
+func (as *authService) Login(ctx context.Context, req types.LoginRequest) (*types.TokenPairResponse, error) {
 	existingUser, err := as.userQueryHandler.HandleGetUserByUsername(ctx, queries.GetUserByUsernameQuery{
 		Username: req.Username,
 	})
@@ -68,21 +69,21 @@ func (as *authService) Login(ctx context.Context, req inbound.LoginRequest) (*in
 		return nil, fmt.Errorf("wrong password")
 	}
 
-	createTokenParams := inbound.CreateTokenParams{
+	createTokenParams := types.CreateTokenParams{
 		UserID: existingUser.GetID(),
 	}
 	tokenPair, err := as.tokenSvc.CreateTokenPair(ctx, createTokenParams)
 	if err != nil {
 		return nil, fmt.Errorf("create token pair: %w", err)
 	}
-	return &inbound.TokenPairDTO{
+	return &types.TokenPairResponse{
 		AccessToken:  tokenPair.AccessToken,
 		RefreshToken: tokenPair.RefreshToken,
 	}, nil
 }
 
-func (as *authService) Refresh(ctx context.Context, req inbound.TokenRequest) (*inbound.TokenDTO, error) {
-	refreshToken, err := as.tokenSvc.ValidateRefreshToken(ctx, inbound.TokenRequest{Token: req.Token})
+func (as *authService) Refresh(ctx context.Context, req types.TokenRequest) (*types.TokenResponse, error) {
+	refreshToken, err := as.tokenSvc.ValidateRefreshToken(ctx, types.TokenRequest{Token: req.Token})
 	if err != nil {
 		return nil, fmt.Errorf("validate refresh token: %w", err)
 	}
@@ -95,26 +96,26 @@ func (as *authService) Refresh(ctx context.Context, req inbound.TokenRequest) (*
 		return nil, fmt.Errorf("get existing user : %w", err)
 	}
 
-	params := inbound.CreateTokenParams{
+	params := types.CreateTokenParams{
 		UserID: user.ID,
 	}
 	accessToken, err := as.tokenSvc.CreateAccessToken(params)
 	if err != nil {
 		return nil, fmt.Errorf("create access token: %w", err)
 	}
-	return &inbound.TokenDTO{
+	return &types.TokenResponse{
 		Token: accessToken.Token,
 	}, nil
 }
 
-func (as *authService) Logout(ctx context.Context, req inbound.TokenRequest) error {
-	if err := as.tokenSvc.RevokeRefreshToken(ctx, inbound.TokenRequest{Token: req.Token}); err != nil {
+func (as *authService) Logout(ctx context.Context, req types.TokenRequest) error {
+	if err := as.tokenSvc.RevokeRefreshToken(ctx, types.TokenRequest{Token: req.Token}); err != nil {
 		return fmt.Errorf("revoke refresh token: %w", err)
 	}
 	return nil
 }
 
-func (as *authService) Validate(ctx context.Context, req inbound.TokenRequest) (*inbound.ValidateResponse, error) {
+func (as *authService) Validate(ctx context.Context, req types.TokenRequest) (*types.ValidateResponse, error) {
 	validateResp, err := as.tokenSvc.ValidateAccessToken(req)
 	if err != nil {
 		return nil, fmt.Errorf("validate access token: %w", err)
@@ -127,9 +128,9 @@ func (as *authService) Validate(ctx context.Context, req inbound.TokenRequest) (
 	if err != nil {
 		return nil, fmt.Errorf("get existing user : %w", err)
 	}
-	return &inbound.ValidateResponse{
+	return &types.ValidateResponse{
 		Valid: true,
-		User: inbound.UserDTO{
+		User: types.UserResponse{
 			ID:       user.ID,
 			Username: user.Username,
 		},

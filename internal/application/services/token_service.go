@@ -6,6 +6,7 @@ import (
 
 	"github.com/ncfex/dcart-auth/internal/application/ports/inbound"
 	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
+	"github.com/ncfex/dcart-auth/internal/application/ports/types"
 	tokenDomain "github.com/ncfex/dcart-auth/internal/domain/token"
 )
 
@@ -27,7 +28,7 @@ func NewTokenService(
 	}
 }
 
-func (ts *tokenService) CreateTokenPair(ctx context.Context, r inbound.CreateTokenParams) (*inbound.TokenPairDTO, error) {
+func (ts *tokenService) CreateTokenPair(ctx context.Context, r types.CreateTokenParams) (*types.TokenPairResponse, error) {
 	accessToken, err := ts.CreateAccessToken(r)
 	if err != nil {
 		return nil, fmt.Errorf("create access token: %w", err)
@@ -37,35 +38,35 @@ func (ts *tokenService) CreateTokenPair(ctx context.Context, r inbound.CreateTok
 	if err != nil {
 		return nil, fmt.Errorf("create refresh token: %w", err)
 	}
-	return &inbound.TokenPairDTO{
+	return &types.TokenPairResponse{
 		AccessToken:  accessToken.Token,
 		RefreshToken: refreshToken.Token,
 	}, nil
 }
 
 // at
-func (ts *tokenService) CreateAccessToken(r inbound.CreateTokenParams) (*inbound.TokenDTO, error) {
+func (ts *tokenService) CreateAccessToken(r types.CreateTokenParams) (*types.TokenResponse, error) {
 	accessTokenString, err := ts.accessTokenGen.Generate(r.UserID)
 	if err != nil {
 		return nil, fmt.Errorf("access token generate: %w", err)
 	}
-	return &inbound.TokenDTO{
+	return &types.TokenResponse{
 		Token: accessTokenString,
 	}, nil
 }
 
-func (ts *tokenService) ValidateAccessToken(r inbound.TokenRequest) (*inbound.ValidateTokenResponse, error) {
+func (ts *tokenService) ValidateAccessToken(r types.TokenRequest) (*types.ValidateTokenResponse, error) {
 	subjectString, err := ts.accessTokenGen.Validate(r.Token)
 	if err != nil {
 		return nil, fmt.Errorf("access token validate: %w", err)
 	}
-	return &inbound.ValidateTokenResponse{
+	return &types.ValidateTokenResponse{
 		Subject: subjectString,
 	}, nil
 }
 
 // rt
-func (ts *tokenService) CreateRefreshToken(ctx context.Context, r inbound.CreateTokenParams) (*inbound.TokenDTO, error) {
+func (ts *tokenService) CreateRefreshToken(ctx context.Context, r types.CreateTokenParams) (*types.TokenResponse, error) {
 	refreshTokenString, err := ts.refreshTokenGen.Generate("")
 	if err != nil {
 		return nil, fmt.Errorf("refresh token generate: %w", err)
@@ -79,12 +80,12 @@ func (ts *tokenService) CreateRefreshToken(ctx context.Context, r inbound.Create
 	if err := ts.tokenRepo.Add(ctx, refreshToken); err != nil {
 		return nil, fmt.Errorf("store token: %w", err)
 	}
-	return &inbound.TokenDTO{
+	return &types.TokenResponse{
 		Token: refreshToken.Token,
 	}, nil
 }
 
-func (ts *tokenService) ValidateRefreshToken(ctx context.Context, r inbound.TokenRequest) (*inbound.ValidateTokenResponse, error) {
+func (ts *tokenService) ValidateRefreshToken(ctx context.Context, r types.TokenRequest) (*types.ValidateTokenResponse, error) {
 	refreshToken, err := ts.tokenRepo.GetByToken(ctx, r.Token)
 	if err != nil {
 		return nil, fmt.Errorf("get token string: %w", err)
@@ -93,12 +94,12 @@ func (ts *tokenService) ValidateRefreshToken(ctx context.Context, r inbound.Toke
 	if err := refreshToken.IsValid(); err != nil {
 		return nil, fmt.Errorf("is valid: %w", err)
 	}
-	return &inbound.ValidateTokenResponse{
+	return &types.ValidateTokenResponse{
 		Subject: refreshToken.UserID,
 	}, nil
 }
 
-func (ts *tokenService) RevokeRefreshToken(ctx context.Context, r inbound.TokenRequest) error {
+func (ts *tokenService) RevokeRefreshToken(ctx context.Context, r types.TokenRequest) error {
 	token, err := ts.tokenRepo.GetByToken(ctx, r.Token)
 	if err != nil {
 		return fmt.Errorf("get token string: %w", err)

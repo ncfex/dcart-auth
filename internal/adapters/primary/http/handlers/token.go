@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/ncfex/dcart-auth/internal/application/ports/inbound"
+	"github.com/ncfex/dcart-auth/internal/application/ports/types"
 	"github.com/ncfex/dcart-auth/pkg/httputil/request"
 )
 
@@ -14,7 +14,7 @@ func (h *handler) refreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenPairResponse, err := h.authenticationService.Refresh(r.Context(), inbound.TokenRequest{
+	tokenPairResponse, err := h.authenticationService.Refresh(r.Context(), types.TokenRequest{
 		Token: refreshToken,
 	})
 	if err != nil {
@@ -32,7 +32,7 @@ func (h *handler) validateToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	validateResponse, err := h.authenticationService.Validate(r.Context(), inbound.TokenRequest{
+	validateResponse, err := h.authenticationService.Validate(r.Context(), types.TokenRequest{
 		Token: accessToken,
 	})
 	if err != nil {
