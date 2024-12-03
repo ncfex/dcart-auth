@@ -1,4 +1,4 @@
-package outbound
+package security
 
 type TokenGenerator interface {
 	Generate(string) (string, error)
@@ -11,9 +11,4 @@ type TokenValidator interface {
 type TokenGeneratorValidator interface {
 	TokenGenerator
 	TokenValidator
-}
-
-type PasswordHasher interface {
-	Hash(password string) (string, error)
-	Compare(hashedPassword, password string) error
 }

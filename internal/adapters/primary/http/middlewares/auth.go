@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/ncfex/dcart-auth/internal/application/ports/infra"
-	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
+	"github.com/ncfex/dcart-auth/internal/application/ports/security"
 
 	"github.com/ncfex/dcart-auth/pkg/httputil/request"
 	"github.com/ncfex/dcart-auth/pkg/httputil/response"
@@ -16,7 +16,7 @@ import (
 
 // todo improve
 func RequireJWTAuth(
-	tokenValidator outbound.TokenValidator,
+	tokenValidator security.TokenValidator,
 	responder response.Responder,
 ) middleware.Middleware {
 	return func(next http.Handler) http.Handler {
