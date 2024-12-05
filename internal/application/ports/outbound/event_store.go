@@ -1,4 +1,4 @@
-package infra
+package outbound
 
 import (
 	"context"
@@ -9,6 +9,5 @@ import (
 type EventStore interface {
 	SaveEvents(ctx context.Context, aggregateID string, events []shared.Event) error
 	GetEvents(ctx context.Context, aggregateID string) ([]shared.Event, error)
-	GetEventsByType(ctx context.Context, aggregateType string) ([]shared.Event, error)
-	GetEventsByUsername(ctx context.Context, username string) ([]shared.Event, error)
+	GetEventsByType(ctx context.Context, eventType string) ([]shared.Event, error)
 }

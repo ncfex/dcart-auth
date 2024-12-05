@@ -4,15 +4,16 @@ import (
 	"context"
 
 	"github.com/ncfex/dcart-auth/internal/application/commands"
-	"github.com/ncfex/dcart-auth/internal/application/ports/infra"
+	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
+
 	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
 
 type userCommandHandler struct {
-	eventStore infra.EventStore // separate read/write
+	eventStore outbound.EventStore // separate read/write
 }
 
-func NewUserCommandHandler(eventStore infra.EventStore) *userCommandHandler {
+func NewUserCommandHandler(eventStore outbound.EventStore) *userCommandHandler {
 	return &userCommandHandler{
 		eventStore: eventStore,
 	}
