@@ -56,6 +56,30 @@ func (u *User) Authenticate(rawPassword string) bool {
 	return password.Matches(u.PasswordHash)
 }
 
+func (u *User) ChangePassword(rawOldPassword, rawNewPassword string) error {
+	oldPwd := Password(rawOldPassword)
+	if !oldPwd.Matches(u.PasswordHash) {
+		return ErrInvalidPassword
+	}
+
+	newPassword, err := NewPassword(rawNewPassword)
+	if err != nil {
+		return err
+	}
+
+	newPasswordHash, err := newPassword.Hash()
+	if err != nil {
+		return err
+	}
+
+	u.PasswordHash = newPasswordHash
+	event := NewUserPasswordChangedEvent(u.ID, u.PasswordHash, u.GetVersion())
+	u.Apply(event)
+	u.Changes = append(u.Changes, event)
+
+	return nil
+}
+
 // todo - use value object
 func validateUserName(username string) error {
 	if username == "" {

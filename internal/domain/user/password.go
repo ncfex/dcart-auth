@@ -9,6 +9,7 @@ import (
 var (
 	ErrPasswordTooShort = errors.New("password must be at least 8 characters long")
 	ErrInvalidPassword  = errors.New("invalid password")
+	ErrHashingPassword  = errors.New("hashing failed")
 )
 
 type Password string
@@ -23,7 +24,7 @@ func NewPassword(rawPassword string) (Password, error) {
 func (p Password) Hash() (string, error) {
 	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(p), bcrypt.DefaultCost)
 	if err != nil {
-		return "", err
+		return "", ErrHashingPassword
 	}
 	return string(hashedBytes), nil
 }
