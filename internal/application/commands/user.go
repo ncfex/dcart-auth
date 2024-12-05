@@ -5,7 +5,8 @@ type RegisterUserCommand struct {
 	Password string
 }
 
-type LoginUserCommand struct {
-	Username string
-	Password string
+type ChangePasswordCommand struct {
+	UserID      string
+	OldPassword string
+	NewPassword string
 }
