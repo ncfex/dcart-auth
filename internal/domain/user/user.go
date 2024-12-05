@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ncfex/dcart-auth/internal/domain/shared"
 )
 
@@ -23,7 +22,7 @@ type User struct {
 	UpdatedAt    time.Time
 }
 
-func NewUser(username, rawPassword string) (*User, error) {
+func NewUser(userID, username, rawPassword string) (*User, error) {
 	if err := validateUserName(username); err != nil {
 		return nil, err
 	}
@@ -40,7 +39,7 @@ func NewUser(username, rawPassword string) (*User, error) {
 
 	user := &User{
 		BaseAggregateRoot: shared.BaseAggregateRoot{
-			ID:      uuid.New().String(),
+			ID:      userID,
 			Version: 0,
 		},
 	}

@@ -33,7 +33,7 @@ func TestNewUser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u, err := NewUser(tt.username, tt.password)
+			u, err := NewUser("test", tt.username, tt.password)
 			if err != tt.expectedError {
 				t.Errorf("NewUser() error = %v, expected error %v", err, tt.expectedError)
 				return
@@ -101,7 +101,7 @@ func TestUser_Authenticate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u, err := NewUser(tt.username, tt.password)
+			u, err := NewUser("test", tt.username, tt.password)
 			if err != nil {
 				t.Fatalf("Failed to create user: %v", err)
 			}
@@ -133,7 +133,7 @@ func TestValidateUsername(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := NewUser(tt.username, "validpass123")
+			_, err := NewUser("test", tt.username, "validpass123")
 			if err != tt.expectedError {
 				t.Errorf("validateUsername() error = %v, expected error %v", err, tt.expectedError)
 			}
