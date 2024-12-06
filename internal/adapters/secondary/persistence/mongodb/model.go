@@ -1,4 +1,4 @@
-package readmodel
+package mongodb
 
 import (
 	"time"

@@ -1,4 +1,4 @@
-package readmodel
+package mongodb
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// todo move this to internal/application/query/user_query_handler.go
 type UserQueryHandler struct {
 	db         *mongo.Database
 	collection string
