@@ -4,14 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/ncfex/dcart-auth/internal/adapters/secondary/postgres/db"
-	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
+	"github.com/ncfex/dcart-auth/internal/adapters/secondary/persistence/postgres/db"
+	"github.com/ncfex/dcart-auth/internal/application/ports/secondary"
 	tokenDomain "github.com/ncfex/dcart-auth/internal/domain/token"
 	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
+
+	"github.com/google/uuid"
 )
 
 var (
@@ -19,14 +19,12 @@ var (
 	ErrValidatingToken = errors.New("error validating token")
 )
 
-// TODO USE DTO, DON'T USE DOMAIN MODEL DIRECTLY
-// TODO DONT USE DOMAIN ERRORS HERE
 type tokenRepository struct {
 	queries   *db.Queries
 	expiresIn time.Duration
 }
 
-func NewTokenRepository(database *database, expiresIn time.Duration) outbound.TokenRepository {
+func NewTokenRepository(database *database, expiresIn time.Duration) secondary.TokenRepository {
 	return &tokenRepository{
 		queries:   db.New(database.DB),
 		expiresIn: expiresIn,
