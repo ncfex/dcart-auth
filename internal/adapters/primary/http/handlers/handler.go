@@ -5,8 +5,9 @@ import (
 	"net/http"
 
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/middlewares"
-	"github.com/ncfex/dcart-auth/internal/application/ports/inbound"
-	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
+
+	"github.com/ncfex/dcart-auth/internal/application/ports/primary/services"
+	"github.com/ncfex/dcart-auth/internal/application/ports/secondary"
 	"github.com/ncfex/dcart-auth/internal/application/ports/security"
 
 	"github.com/ncfex/dcart-auth/pkg/httputil/response"
@@ -16,19 +17,19 @@ import (
 type handler struct {
 	logger                *log.Logger
 	responder             response.Responder
-	authenticationService inbound.AuthenticationService
+	authenticationService services.AuthenticationService
 	tokenManager          security.TokenGeneratorValidator
-	tokenRepo             outbound.TokenRepository
-	eventStore            outbound.EventStore
+	tokenRepo             secondary.TokenRepository
+	eventStore            secondary.EventStore
 }
 
 func NewHandler(
 	logger *log.Logger,
 	responder response.Responder,
-	authenticationService inbound.AuthenticationService,
+	authenticationService services.AuthenticationService,
 	tokenManager security.TokenGeneratorValidator,
-	tokenRepo outbound.TokenRepository,
-	eventStore outbound.EventStore,
+	tokenRepo secondary.TokenRepository,
+	eventStore secondary.EventStore,
 ) *handler {
 	return &handler{
 		logger:                logger,
