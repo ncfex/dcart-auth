@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ncfex/dcart-auth/internal/application/ports/primary/query"
 	"github.com/ncfex/dcart-auth/internal/application/ports/types"
-	"github.com/ncfex/dcart-auth/internal/application/queries"
 	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -24,7 +24,7 @@ func NewUserQueryHandler(db *mongo.Database) *UserQueryHandler {
 	}
 }
 
-func (h *UserQueryHandler) GetUserByID(ctx context.Context, query queries.GetUserByIDQuery) (*types.UserResponse, error) {
+func (h *UserQueryHandler) GetUserByID(ctx context.Context, query query.GetUserByIDQuery) (*types.UserResponse, error) {
 	var userRM UserReadModel
 	err := h.db.Collection(h.collection).FindOne(ctx, bson.M{"_id": query.UserID}).Decode(&userRM)
 	if err == mongo.ErrNoDocuments {
@@ -40,7 +40,7 @@ func (h *UserQueryHandler) GetUserByID(ctx context.Context, query queries.GetUse
 	}, nil
 }
 
-func (h *UserQueryHandler) GetUserByUsername(ctx context.Context, query queries.GetUserByUsernameQuery) (*types.UserResponse, error) {
+func (h *UserQueryHandler) GetUserByUsername(ctx context.Context, query query.GetUserByUsernameQuery) (*types.UserResponse, error) {
 	var userRM UserReadModel
 	err := h.db.Collection(h.collection).FindOne(ctx, bson.M{"username": query.Username}).Decode(&userRM)
 	if err == mongo.ErrNoDocuments {

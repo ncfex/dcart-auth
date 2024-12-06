@@ -1,14 +1,13 @@
-package services
+package command
 
 import (
 	"context"
 	"fmt"
 	"log"
 
-	"github.com/ncfex/dcart-auth/internal/application/commands"
 	"github.com/ncfex/dcart-auth/internal/application/ports/id"
-	"github.com/ncfex/dcart-auth/internal/application/ports/inbound"
 	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
+	"github.com/ncfex/dcart-auth/internal/application/ports/primary/command"
 	"github.com/ncfex/dcart-auth/internal/application/ports/types"
 	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
@@ -23,7 +22,7 @@ func NewUserCommandHandler(
 	eventStore outbound.EventStore,
 	eventPublisher outbound.EventPublisher,
 	idGenerator id.IDGenerator,
-) inbound.UserWriteModel {
+) command.UserCommandPort {
 	return &UserCommandHandler{
 		eventStore:     eventStore,
 		eventPublisher: eventPublisher,
@@ -31,7 +30,7 @@ func NewUserCommandHandler(
 	}
 }
 
-func (h *UserCommandHandler) RegisterUser(ctx context.Context, cmd commands.RegisterUserCommand) (*types.UserResponse, error) {
+func (h *UserCommandHandler) RegisterUser(ctx context.Context, cmd command.RegisterUserCommand) (*types.UserResponse, error) {
 	userID := h.idGenerator.GenerateFromData([]byte(cmd.Username))
 
 	events, err := h.eventStore.GetEvents(ctx, userID)
@@ -64,7 +63,7 @@ func (h *UserCommandHandler) RegisterUser(ctx context.Context, cmd commands.Regi
 	}, nil
 }
 
-func (h *UserCommandHandler) AuthenticateUser(ctx context.Context, cmd commands.AuthenticateUserCommand) (*types.UserResponse, error) {
+func (h *UserCommandHandler) AuthenticateUser(ctx context.Context, cmd command.AuthenticateUserCommand) (*types.UserResponse, error) {
 	userID := h.idGenerator.GenerateFromData([]byte(cmd.Username))
 
 	events, err := h.eventStore.GetEvents(ctx, userID)
@@ -89,7 +88,7 @@ func (h *UserCommandHandler) AuthenticateUser(ctx context.Context, cmd commands.
 	}, nil
 }
 
-func (h *UserCommandHandler) ChangePassword(ctx context.Context, cmd commands.ChangePasswordCommand) error {
+func (h *UserCommandHandler) ChangePassword(ctx context.Context, cmd command.ChangePasswordCommand) error {
 	events, err := h.eventStore.GetEvents(ctx, cmd.UserID)
 	if err != nil {
 		return fmt.Errorf("loading events: %w", err)

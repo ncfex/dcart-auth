@@ -4,21 +4,21 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ncfex/dcart-auth/internal/application/commands"
 	"github.com/ncfex/dcart-auth/internal/application/ports/inbound"
+	"github.com/ncfex/dcart-auth/internal/application/ports/primary/command"
+	"github.com/ncfex/dcart-auth/internal/application/ports/primary/query"
 	"github.com/ncfex/dcart-auth/internal/application/ports/types"
-	"github.com/ncfex/dcart-auth/internal/application/queries"
 )
 
 type authService struct {
-	userCommandHandler inbound.UserWriteModel
-	userQueryHandler   inbound.UserReadModel
+	userCommandHandler command.UserCommandPort
+	userQueryHandler   query.UserQueryPort
 	tokenSvc           inbound.TokenService
 }
 
 func NewAuthService(
-	userCommandHandler inbound.UserWriteModel,
-	userQueryHandler inbound.UserReadModel,
+	userCommandHandler command.UserCommandPort,
+	userQueryHandler query.UserQueryPort,
 	tokenSvc inbound.TokenService,
 ) inbound.AuthenticationService {
 	return &authService{
@@ -29,7 +29,7 @@ func NewAuthService(
 }
 
 func (as *authService) Register(ctx context.Context, req types.RegisterRequest) (*types.UserResponse, error) {
-	registerCommand := commands.RegisterUserCommand{
+	registerCommand := command.RegisterUserCommand{
 		Username: req.Username,
 		Password: req.Password,
 	}
@@ -37,7 +37,7 @@ func (as *authService) Register(ctx context.Context, req types.RegisterRequest) 
 }
 
 func (as *authService) Login(ctx context.Context, req types.LoginRequest) (*types.TokenPairResponse, error) {
-	authenticateCmd := commands.AuthenticateUserCommand{
+	authenticateCmd := command.AuthenticateUserCommand{
 		Username: req.Username,
 		Password: req.Password,
 	}
@@ -60,7 +60,7 @@ func (as *authService) Login(ctx context.Context, req types.LoginRequest) (*type
 }
 
 func (as *authService) ChangePassword(ctx context.Context, req types.ChangePasswordRequest) error {
-	changePasswordCmd := commands.ChangePasswordCommand{
+	changePasswordCmd := command.ChangePasswordCommand{
 		UserID:      req.UserID,
 		OldPassword: req.OldPassword,
 		NewPassword: req.NewPassword,
@@ -78,7 +78,7 @@ func (as *authService) Refresh(ctx context.Context, req types.TokenRequest) (*ty
 	}
 
 	// just to check user exists
-	getUserByIdQuery := queries.GetUserByIDQuery{
+	getUserByIdQuery := query.GetUserByIDQuery{
 		UserID: refreshToken.Subject,
 	}
 	_, err = as.userQueryHandler.GetUserByID(ctx, getUserByIdQuery)
@@ -111,7 +111,7 @@ func (as *authService) Validate(ctx context.Context, req types.TokenRequest) (*t
 		return nil, fmt.Errorf("validate access token: %w", err)
 	}
 
-	getUserByIdQuery := queries.GetUserByIDQuery{
+	getUserByIdQuery := query.GetUserByIDQuery{
 		UserID: validateResp.Subject,
 	}
 	user, err := as.userQueryHandler.GetUserByID(ctx, getUserByIdQuery)
