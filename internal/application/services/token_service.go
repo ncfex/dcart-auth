@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ncfex/dcart-auth/internal/application/ports/inbound"
-	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
+	"github.com/ncfex/dcart-auth/internal/application/ports/primary/services"
+	"github.com/ncfex/dcart-auth/internal/application/ports/secondary"
 	"github.com/ncfex/dcart-auth/internal/application/ports/security"
 	"github.com/ncfex/dcart-auth/internal/application/ports/types"
 	tokenDomain "github.com/ncfex/dcart-auth/internal/domain/token"
@@ -14,14 +14,14 @@ import (
 type tokenService struct {
 	accessTokenGen  security.TokenGeneratorValidator
 	refreshTokenGen security.TokenGenerator
-	tokenRepo       outbound.TokenRepository
+	tokenRepo       secondary.TokenRepository
 }
 
 func NewTokenService(
 	accessTokenGen security.TokenGeneratorValidator,
 	refreshTokenGen security.TokenGenerator,
-	tokenRepo outbound.TokenRepository,
-) inbound.TokenService {
+	tokenRepo secondary.TokenRepository,
+) services.TokenService {
 	return &tokenService{
 		accessTokenGen:  accessTokenGen,
 		refreshTokenGen: refreshTokenGen,

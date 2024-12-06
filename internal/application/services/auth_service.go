@@ -4,23 +4,23 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ncfex/dcart-auth/internal/application/ports/inbound"
 	"github.com/ncfex/dcart-auth/internal/application/ports/primary/command"
 	"github.com/ncfex/dcart-auth/internal/application/ports/primary/query"
+	"github.com/ncfex/dcart-auth/internal/application/ports/primary/services"
 	"github.com/ncfex/dcart-auth/internal/application/ports/types"
 )
 
 type authService struct {
 	userCommandHandler command.UserCommandPort
 	userQueryHandler   query.UserQueryPort
-	tokenSvc           inbound.TokenService
+	tokenSvc           services.TokenService
 }
 
 func NewAuthService(
 	userCommandHandler command.UserCommandPort,
 	userQueryHandler query.UserQueryPort,
-	tokenSvc inbound.TokenService,
-) inbound.AuthenticationService {
+	tokenSvc services.TokenService,
+) services.AuthenticationService {
 	return &authService{
 		userCommandHandler: userCommandHandler,
 		userQueryHandler:   userQueryHandler,

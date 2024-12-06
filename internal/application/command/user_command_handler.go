@@ -6,21 +6,21 @@ import (
 	"log"
 
 	"github.com/ncfex/dcart-auth/internal/application/ports/id"
-	"github.com/ncfex/dcart-auth/internal/application/ports/outbound"
 	"github.com/ncfex/dcart-auth/internal/application/ports/primary/command"
+	"github.com/ncfex/dcart-auth/internal/application/ports/secondary"
 	"github.com/ncfex/dcart-auth/internal/application/ports/types"
 	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
 
 type UserCommandHandler struct {
-	eventStore     outbound.EventStore
-	eventPublisher outbound.EventPublisher
+	eventStore     secondary.EventStore
+	eventPublisher secondary.EventPublisher
 	idGenerator    id.IDGenerator
 }
 
 func NewUserCommandHandler(
-	eventStore outbound.EventStore,
-	eventPublisher outbound.EventPublisher,
+	eventStore secondary.EventStore,
+	eventPublisher secondary.EventPublisher,
 	idGenerator id.IDGenerator,
 ) command.UserCommandPort {
 	return &UserCommandHandler{
