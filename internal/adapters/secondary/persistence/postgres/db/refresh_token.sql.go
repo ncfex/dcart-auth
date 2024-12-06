@@ -14,7 +14,13 @@ import (
 )
 
 const createRefreshToken = `-- name: CreateRefreshToken :one
-INSERT INTO refresh_tokens (token, created_at, updated_at, user_id, expires_at)
+INSERT INTO refresh_tokens (
+  token,
+  created_at,
+  updated_at,
+  user_id,
+  expires_at
+)
 VALUES (
     $1,
     NOW() AT TIME ZONE 'UTC',
@@ -22,7 +28,7 @@ VALUES (
     $2,
     $3
 )
-RETURNING token, created_at, updated_at, user_id, expires_at, revoked_at
+RETURNING token, user_id, created_at, updated_at, expires_at, revoked_at
 `
 
 type CreateRefreshTokenParams struct {
@@ -36,9 +42,9 @@ func (q *Queries) CreateRefreshToken(ctx context.Context, arg CreateRefreshToken
 	var i RefreshToken
 	err := row.Scan(
 		&i.Token,
+		&i.UserID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.UserID,
 		&i.ExpiresAt,
 		&i.RevokedAt,
 	)
@@ -46,10 +52,11 @@ func (q *Queries) CreateRefreshToken(ctx context.Context, arg CreateRefreshToken
 }
 
 const getTokenByTokenString = `-- name: GetTokenByTokenString :one
-SELECT token, created_at, updated_at, user_id, expires_at, revoked_at FROM refresh_tokens
+SELECT token, user_id, created_at, updated_at, expires_at, revoked_at
+FROM refresh_tokens
 WHERE token = $1
-AND revoked_at IS NULL
-AND expires_at > NOW() AT TIME ZONE 'UTC'
+    AND revoked_at IS NULL
+    AND expires_at > NOW() AT TIME ZONE 'UTC'
 `
 
 func (q *Queries) GetTokenByTokenString(ctx context.Context, token string) (RefreshToken, error) {
@@ -57,9 +64,9 @@ func (q *Queries) GetTokenByTokenString(ctx context.Context, token string) (Refr
 	var i RefreshToken
 	err := row.Scan(
 		&i.Token,
+		&i.UserID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.UserID,
 		&i.ExpiresAt,
 		&i.RevokedAt,
 	)
@@ -67,11 +74,14 @@ func (q *Queries) GetTokenByTokenString(ctx context.Context, token string) (Refr
 }
 
 const revokeRefreshToken = `-- name: RevokeRefreshToken :one
-UPDATE refresh_tokens SET
+UPDATE refresh_tokens
+SET
     revoked_at = NOW() AT TIME ZONE 'UTC',
     updated_at = NOW() AT TIME ZONE 'UTC'
 WHERE token = $1
-RETURNING token, created_at, updated_at, user_id, expires_at, revoked_at
+    AND revoked_at IS NULL
+    AND expires_at > NOW() AT TIME ZONE 'UTC'
+RETURNING token, user_id, created_at, updated_at, expires_at, revoked_at
 `
 
 func (q *Queries) RevokeRefreshToken(ctx context.Context, token string) (RefreshToken, error) {
@@ -79,9 +89,9 @@ func (q *Queries) RevokeRefreshToken(ctx context.Context, token string) (Refresh
 	var i RefreshToken
 	err := row.Scan(
 		&i.Token,
+		&i.UserID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.UserID,
 		&i.ExpiresAt,
 		&i.RevokedAt,
 	)

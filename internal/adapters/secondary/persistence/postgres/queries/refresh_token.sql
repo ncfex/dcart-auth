@@ -1,5 +1,11 @@
 -- name: CreateRefreshToken :one
-INSERT INTO refresh_tokens (token, created_at, updated_at, user_id, expires_at)
+INSERT INTO refresh_tokens (
+  token,
+  created_at,
+  updated_at,
+  user_id,
+  expires_at
+)
 VALUES (
     $1,
     NOW() AT TIME ZONE 'UTC',
@@ -10,17 +16,21 @@ VALUES (
 RETURNING *;
 
 -- name: RevokeRefreshToken :one
-UPDATE refresh_tokens SET
+UPDATE refresh_tokens
+SET
     revoked_at = NOW() AT TIME ZONE 'UTC',
     updated_at = NOW() AT TIME ZONE 'UTC'
 WHERE token = $1
+    AND revoked_at IS NULL
+    AND expires_at > NOW() AT TIME ZONE 'UTC'
 RETURNING *;
 
 -- name: GetTokenByTokenString :one
-SELECT * FROM refresh_tokens
+SELECT *
+FROM refresh_tokens
 WHERE token = $1
-AND revoked_at IS NULL
-AND expires_at > NOW() AT TIME ZONE 'UTC';
+    AND revoked_at IS NULL
+    AND expires_at > NOW() AT TIME ZONE 'UTC';
 
 -- name: SaveToken :exec
 UPDATE refresh_tokens
