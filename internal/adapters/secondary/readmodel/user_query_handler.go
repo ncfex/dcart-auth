@@ -13,12 +13,20 @@ import (
 )
 
 type UserQueryHandler struct {
-	db *mongo.Database
+	db         *mongo.Database
+	collection string
+}
+
+func NewUserQueryHandler(db *mongo.Database) *UserQueryHandler {
+	return &UserQueryHandler{
+		db:         db,
+		collection: "users",
+	}
 }
 
 func (h *UserQueryHandler) GetUserByID(ctx context.Context, query queries.GetUserByIDQuery) (*types.UserResponse, error) {
 	var userRM UserReadModel
-	err := h.db.Collection("users").FindOne(ctx, bson.M{"_id": query.UserID}).Decode(&userRM)
+	err := h.db.Collection(h.collection).FindOne(ctx, bson.M{"_id": query.UserID}).Decode(&userRM)
 	if err == mongo.ErrNoDocuments {
 		return nil, userDomain.ErrUserNotFound
 	}
@@ -34,7 +42,7 @@ func (h *UserQueryHandler) GetUserByID(ctx context.Context, query queries.GetUse
 
 func (h *UserQueryHandler) GetUserByUsername(ctx context.Context, query queries.GetUserByUsernameQuery) (*types.UserResponse, error) {
 	var userRM UserReadModel
-	err := h.db.Collection("users").FindOne(ctx, bson.M{"username": query.Username}).Decode(&userRM)
+	err := h.db.Collection(h.collection).FindOne(ctx, bson.M{"username": query.Username}).Decode(&userRM)
 	if err == mongo.ErrNoDocuments {
 		return nil, userDomain.ErrUserNotFound
 	}
