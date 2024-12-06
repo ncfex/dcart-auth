@@ -10,6 +10,12 @@ type LoginRequest struct {
 	Password string `json:"password" validate:"required"`
 }
 
+type ChangePasswordRequest struct {
+	UserID      string `json:"user_id" validate:"required"`
+	OldPassword string `json:"old_password" validate:"required"`
+	NewPassword string `json:"new_password" validate:"required"`
+}
+
 type TokenRequest struct {
 	Token string `json:"token" validate:"required"`
 }

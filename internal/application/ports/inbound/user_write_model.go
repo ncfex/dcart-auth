@@ -8,6 +8,7 @@ import (
 )
 
 type UserWriteModel interface {
+	AuthenticateUser(ctx context.Context, cmd commands.AuthenticateUserCommand) (*types.UserResponse, error)
 	RegisterUser(ctx context.Context, cmd commands.RegisterUserCommand) (*types.UserResponse, error)
 	ChangePassword(ctx context.Context, cmd commands.ChangePasswordCommand) error
 }
