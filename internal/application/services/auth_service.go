@@ -8,18 +8,17 @@ import (
 	"github.com/ncfex/dcart-auth/internal/application/ports/inbound"
 	"github.com/ncfex/dcart-auth/internal/application/ports/types"
 	"github.com/ncfex/dcart-auth/internal/application/queries"
-	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
 )
 
 type authService struct {
-	userCommandHandler inbound.UserCommandHandler
-	userQueryHandler   inbound.UserQueryHandler
+	userCommandHandler inbound.UserWriteModel
+	userQueryHandler   inbound.UserReadModel
 	tokenSvc           inbound.TokenService
 }
 
 func NewAuthService(
-	userCommandHandler inbound.UserCommandHandler,
-	userQueryHandler inbound.UserQueryHandler,
+	userCommandHandler inbound.UserWriteModel,
+	userQueryHandler inbound.UserReadModel,
 	tokenSvc inbound.TokenService,
 ) inbound.AuthenticationService {
 	return &authService{
@@ -30,47 +29,25 @@ func NewAuthService(
 }
 
 func (as *authService) Register(ctx context.Context, req types.RegisterRequest) (*types.UserResponse, error) {
-	if _, err := as.userQueryHandler.HandleGetUserByUsername(ctx, queries.GetUserByUsernameQuery{
-		Username: req.Username,
-	}); err == nil {
-		return nil, fmt.Errorf("get user username: %w", userDomain.ErrUserAlreadyExists)
-	} else if err != userDomain.ErrUserNotFound {
-		return nil, fmt.Errorf("get user username: %w", err)
-	}
-
 	registerCommand := commands.RegisterUserCommand{
 		Username: req.Username,
 		Password: req.Password,
 	}
-	user, err := as.userCommandHandler.HandleRegisterUser(ctx, registerCommand)
-	if err != nil {
-		return nil, fmt.Errorf("register user: %w", err)
-	}
-
-	return &types.UserResponse{
-		ID:       user.ID,
-		Username: user.Username,
-	}, nil
+	return as.userCommandHandler.RegisterUser(ctx, registerCommand)
 }
 
 func (as *authService) Login(ctx context.Context, req types.LoginRequest) (*types.TokenPairResponse, error) {
-	existingUser, err := as.userQueryHandler.HandleGetUserByUsername(ctx, queries.GetUserByUsernameQuery{
+	authenticateCmd := commands.AuthenticateUserCommand{
 		Username: req.Username,
-	})
+		Password: req.Password,
+	}
+	authenticatedUser, err := as.userCommandHandler.AuthenticateUser(ctx, authenticateCmd)
 	if err != nil {
-		return nil, fmt.Errorf("get user username: %w", err)
-	}
-	if existingUser == nil {
-		return nil, fmt.Errorf("user not found")
-	}
-
-	correct := existingUser.Authenticate(req.Password)
-	if !correct {
-		return nil, fmt.Errorf("wrong password")
+		return nil, fmt.Errorf("create token pair: %w", err)
 	}
 
 	createTokenParams := types.CreateTokenParams{
-		UserID: existingUser.GetID(),
+		UserID: authenticatedUser.ID,
 	}
 	tokenPair, err := as.tokenSvc.CreateTokenPair(ctx, createTokenParams)
 	if err != nil {
@@ -82,22 +59,35 @@ func (as *authService) Login(ctx context.Context, req types.LoginRequest) (*type
 	}, nil
 }
 
+func (as *authService) ChangePassword(ctx context.Context, req types.ChangePasswordRequest) error {
+	changePasswordCmd := commands.ChangePasswordCommand{
+		UserID:      req.UserID,
+		OldPassword: req.OldPassword,
+		NewPassword: req.NewPassword,
+	}
+	if err := as.userCommandHandler.ChangePassword(ctx, changePasswordCmd); err != nil {
+		return fmt.Errorf("change password: %w", err)
+	}
+	return nil
+}
+
 func (as *authService) Refresh(ctx context.Context, req types.TokenRequest) (*types.TokenResponse, error) {
 	refreshToken, err := as.tokenSvc.ValidateRefreshToken(ctx, types.TokenRequest{Token: req.Token})
 	if err != nil {
 		return nil, fmt.Errorf("validate refresh token: %w", err)
 	}
 
+	// just to check user exists
 	getUserByIdQuery := queries.GetUserByIDQuery{
 		UserID: refreshToken.Subject,
 	}
-	user, err := as.userQueryHandler.HandleGetUserById(ctx, getUserByIdQuery)
+	_, err = as.userQueryHandler.GetUserByID(ctx, getUserByIdQuery)
 	if err != nil {
 		return nil, fmt.Errorf("get existing user : %w", err)
 	}
 
 	params := types.CreateTokenParams{
-		UserID: user.ID,
+		UserID: refreshToken.Subject,
 	}
 	accessToken, err := as.tokenSvc.CreateAccessToken(params)
 	if err != nil {
@@ -124,7 +114,7 @@ func (as *authService) Validate(ctx context.Context, req types.TokenRequest) (*t
 	getUserByIdQuery := queries.GetUserByIDQuery{
 		UserID: validateResp.Subject,
 	}
-	user, err := as.userQueryHandler.HandleGetUserById(ctx, getUserByIdQuery)
+	user, err := as.userQueryHandler.GetUserByID(ctx, getUserByIdQuery)
 	if err != nil {
 		return nil, fmt.Errorf("get existing user : %w", err)
 	}
