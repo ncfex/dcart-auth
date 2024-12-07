@@ -7,8 +7,8 @@ import (
 )
 
 type UserRegisteredEventPayload struct {
-	Username     string
-	PasswordHash string
+	Username     string `json:"username"`
+	PasswordHash string `json:"password_hash"`
 }
 
 func NewUserRegisteredEvent(aggregateID string, username, passwordHash string) shared.Event {
@@ -23,7 +23,7 @@ func NewUserRegisteredEvent(aggregateID string, username, passwordHash string) s
 }
 
 type UserPasswordChangedEventPayload struct {
-	NewPasswordHash string
+	NewPasswordHash string `json:"new_password_hash"`
 }
 
 func NewUserPasswordChangedEvent(aggregateID string, newPasswordHash string, version int) shared.Event {
