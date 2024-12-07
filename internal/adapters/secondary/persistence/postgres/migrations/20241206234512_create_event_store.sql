@@ -1,6 +1,6 @@
 -- +goose Up
 CREATE TABLE events (
-    id BIGSERIAL PRIMARY KEY,
+    id VARCHAR(255) PRIMARY KEY,
     aggregate_id VARCHAR(255) NOT NULL,
     aggregate_type VARCHAR(255) NOT NULL,
     event_type VARCHAR(255) NOT NULL,

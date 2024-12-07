@@ -12,8 +12,12 @@ import (
 	"time"
 
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/handlers"
-	"github.com/ncfex/dcart-auth/internal/adapters/secondary/memory"
-	"github.com/ncfex/dcart-auth/internal/adapters/secondary/postgres"
+	"github.com/ncfex/dcart-auth/internal/adapters/secondary/id"
+	"github.com/ncfex/dcart-auth/internal/adapters/secondary/messaging/mqtest"
+	"github.com/ncfex/dcart-auth/internal/adapters/secondary/persistence/mongodb"
+	"github.com/ncfex/dcart-auth/internal/adapters/secondary/persistence/postgres"
+
+	"github.com/ncfex/dcart-auth/internal/application/command"
 	"github.com/ncfex/dcart-auth/internal/application/services"
 
 	"github.com/ncfex/dcart-auth/internal/config"
@@ -24,11 +28,15 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
+
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
+	// write db
+	// todo improve
 	postgresURL := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		cfg.PostgresUser,
@@ -38,20 +46,51 @@ func main() {
 		cfg.PostgresDB,
 	)
 
-	db, err := postgres.NewDatabase(postgresURL)
+	postgresDB, err := postgres.NewDatabase(postgresURL)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
+	defer postgresDB.Close()
+
+	// read db
+	mongoConfig := mongodb.Config{
+		URI:            cfg.MongoURI,
+		Database:       cfg.MongoCollection,
+		ConnectTimeout: 10 * time.Second,
+		MaxPoolSize:    100,
+		MinPoolSize:    10,
+	}
+
+	mongoClient, err := mongodb.NewClient(mongoConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := mongoClient.Connect(ctx); err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
 
 	// persist
-	tokenRepo := postgres.NewTokenRepository(db, 24*7*time.Hour)
-	eventStore := memory.NewInMemoryEventStore()
+	tokenRepo := postgres.NewTokenRepository(postgresDB, 24*7*time.Hour)
+	postgresEventStore := postgres.NewPostgresEventStore(postgresDB.DB)
+
+	// test
+	testPublisher := mqtest.NewEventPublisher()
+
+	// id
+	deterministicIDGen := id.NewDeterministicIDGenerator("dcart")
 
 	// cqrs
-	userCommandHandler := services.NewUserCommandHandler(eventStore)
-	userQueryHandler := services.NewUserQueryHandler(eventStore)
+	userCommandHandler := command.NewUserCommandHandler(
+		postgresEventStore,
+		testPublisher,
+		deterministicIDGen,
+	)
 
+	// todo improve
+	userQueryHandler := mongodb.NewUserQueryHandler(mongoClient.Database())
+
+	// security
 	jwtManager := jwt.NewJWTService("dcart", cfg.JwtSecret, time.Minute*15)
 	refreshTokenGenerator := refresh.NewHexRefreshGenerator("dc_", 32)
 
@@ -72,7 +111,7 @@ func main() {
 		authService,
 		jwtManager,
 		tokenRepo,
-		eventStore,
+		postgresEventStore,
 	)
 
 	srv := &http.Server{
@@ -108,6 +147,14 @@ func main() {
 
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Printf("http server shutting down: %v", err)
+	}
+
+	if err := postgresDB.Close(); err != nil {
+		log.Printf("Error during database close: %v", err)
+	}
+
+	if err := mongoClient.Disconnect(ctx); err != nil {
+		log.Printf("Error during database close: %v", err)
 	}
 
 	waitCh := make(chan struct{})

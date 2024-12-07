@@ -15,7 +15,7 @@ func NewEventPublisher() *EventPublisher {
 }
 
 func (ep *EventPublisher) PublishEvent(ctx context.Context, event shared.Event) error {
-	fmt.Printf("%s event published for aggregate ID: %s\naggregate type: %s\n at time %s", event.GetEventType(), event.GetAggregateID(), event.GetAggregateType(), event.GetTimestamp().UTC())
+	fmt.Printf("%s event published for aggregate ID: %s\naggregate type: %s\n at time %s\n", event.GetEventType(), event.GetAggregateID(), event.GetAggregateType(), event.GetTimestamp().UTC())
 
 	return nil
 }
