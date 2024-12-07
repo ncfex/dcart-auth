@@ -73,6 +73,7 @@ func (u *User) ChangePassword(rawOldPassword, rawNewPassword string) error {
 	}
 
 	u.PasswordHash = newPasswordHash
+	u.Version += 1
 	event := NewUserPasswordChangedEvent(u.ID, u.PasswordHash, u.GetVersion())
 	u.Apply(event)
 	u.Changes = append(u.Changes, event)
@@ -104,4 +105,9 @@ func (u *User) Apply(event shared.Event) {
 		u.PasswordHash = payload.NewPasswordHash
 		u.UpdatedAt = event.GetTimestamp()
 	}
+}
+
+func ReconstructFromEvents(events []shared.Event) (*User, error) {
+	factory := NewUserFactory()
+	return shared.ReconstructAggregate(events, factory)
 }
