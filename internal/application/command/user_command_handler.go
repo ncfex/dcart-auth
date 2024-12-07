@@ -77,7 +77,7 @@ func (h *UserCommandHandler) AuthenticateUser(ctx context.Context, cmd command.A
 	}
 
 	if ok := currentUser.Authenticate(cmd.Password); !ok {
-		return nil, fmt.Errorf("saving events: %w", err)
+		return nil, fmt.Errorf("wrong password")
 	}
 
 	// maybe publish event
