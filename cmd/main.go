@@ -13,7 +13,7 @@ import (
 
 	"github.com/ncfex/dcart-auth/internal/adapters/primary/http/handlers"
 	"github.com/ncfex/dcart-auth/internal/adapters/secondary/id"
-	"github.com/ncfex/dcart-auth/internal/adapters/secondary/messaging/mqtest"
+	"github.com/ncfex/dcart-auth/internal/adapters/secondary/messaging/rabbitmq"
 	"github.com/ncfex/dcart-auth/internal/adapters/secondary/persistence/mongodb"
 	"github.com/ncfex/dcart-auth/internal/adapters/secondary/persistence/postgres"
 
@@ -35,6 +35,7 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
+	// infra
 	// write db
 	// todo improve
 	postgresURL := fmt.Sprintf(
@@ -45,12 +46,10 @@ func main() {
 		cfg.PostgresPort,
 		cfg.PostgresDB,
 	)
-
 	postgresDB, err := postgres.NewDatabase(postgresURL)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer postgresDB.Close()
 
 	// read db
 	mongoConfig := mongodb.Config{
@@ -60,12 +59,10 @@ func main() {
 		MaxPoolSize:    100,
 		MinPoolSize:    10,
 	}
-
 	mongoClient, err := mongodb.NewClient(mongoConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	if err := mongoClient.Connect(ctx); err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
@@ -73,9 +70,41 @@ func main() {
 	// persist
 	tokenRepo := postgres.NewTokenRepository(postgresDB, 24*7*time.Hour)
 	postgresEventStore := postgres.NewPostgresEventStore(postgresDB.DB)
+	mongoProjector := mongodb.NewMongoProjector(mongoClient.Database(), "users")
 
-	// test
-	testPublisher := mqtest.NewEventPublisher()
+	// messaging
+	// todo move to config
+	// pub
+	publisherConfig := rabbitmq.RabbitMQConfig{
+		URI:          "amqp://dev_user:dev_password@localhost:5672/auth_vhost",
+		Exchange:     "domain.events",
+		ExchangeType: "topic",
+		RoutingKey:   "auth.#",
+		Timeout:      5 * time.Second,
+	}
+	rabbitmqPublisher, err := rabbitmq.NewRabbitMQAdapter(publisherConfig)
+	if err != nil {
+		log.Fatalf("publisher initialization failed: %v", err)
+	}
+
+	// sub
+	rabbitmqConsumerConfig := rabbitmq.ConsumerConfig{
+		URI:               "amqp://dev_user:dev_password@localhost:5672/auth_vhost",
+		Exchange:          "domain.events",
+		ExchangeType:      "topic",
+		Queue:             "auth.events",
+		RoutingKey:        "#",
+		PrefetchCount:     50,
+		ReconnectDelay:    time.Second * 5,
+		ProcessingTimeout: time.Second * 30,
+	}
+	rabbitmqConsumer, err := rabbitmq.NewConsumer(rabbitmqConsumerConfig, mongoProjector)
+	if err != nil {
+		log.Fatalf("Failed to create consumer: %v", err)
+	}
+	if err := rabbitmqConsumer.Start(ctx); err != nil {
+		log.Fatalf("Failed to start consumer: %v", err)
+	}
 
 	// id
 	deterministicIDGen := id.NewDeterministicIDGenerator("dcart")
@@ -83,7 +112,7 @@ func main() {
 	// cqrs
 	userCommandHandler := command.NewUserCommandHandler(
 		postgresEventStore,
-		testPublisher,
+		rabbitmqPublisher,
 		deterministicIDGen,
 	)
 
@@ -155,6 +184,14 @@ func main() {
 
 	if err := mongoClient.Disconnect(ctx); err != nil {
 		log.Printf("Error during database close: %v", err)
+	}
+
+	if err := rabbitmqPublisher.Close(); err != nil {
+		log.Printf("Error during rabbitmq pub close: %v", err)
+	}
+
+	if err := rabbitmqConsumer.Stop(); err != nil {
+		log.Printf("Error during rabbitmq sub close: %v", err)
 	}
 
 	waitCh := make(chan struct{})
