@@ -56,7 +56,7 @@ func main() {
 	// read db
 	mongoConfig := mongodb.Config{
 		URI:            cfg.MongoURI,
-		Database:       cfg.MongoCollection,
+		Database:       cfg.MongoDatabase,
 		ConnectTimeout: 10 * time.Second,
 		MaxPoolSize:    100,
 		MinPoolSize:    10,
