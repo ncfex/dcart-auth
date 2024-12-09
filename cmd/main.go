@@ -16,6 +16,8 @@ import (
 	"github.com/ncfex/dcart-auth/internal/adapters/secondary/messaging/rabbitmq"
 	"github.com/ncfex/dcart-auth/internal/adapters/secondary/persistence/mongodb"
 	"github.com/ncfex/dcart-auth/internal/adapters/secondary/persistence/postgres"
+	"github.com/ncfex/dcart-auth/internal/domain/shared"
+	"github.com/ncfex/dcart-auth/internal/domain/user"
 
 	"github.com/ncfex/dcart-auth/internal/application/command"
 	"github.com/ncfex/dcart-auth/internal/application/services"
@@ -67,10 +69,23 @@ func main() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
+	// event registry
+	eventRegistry := shared.NewEventRegistry()
+	user.RegisterEvents(eventRegistry)
+
 	// persist
-	tokenRepo := postgres.NewTokenRepository(postgresDB, 24*7*time.Hour)
-	postgresEventStore := postgres.NewPostgresEventStore(postgresDB.DB)
-	mongoProjector := mongodb.NewMongoProjector(mongoClient.Database(), "users")
+	tokenRepo := postgres.NewTokenRepository(
+		postgresDB,
+		24*7*time.Hour,
+	)
+	postgresEventStore := postgres.NewPostgresEventStore(
+		postgresDB.DB,
+		eventRegistry,
+	)
+	mongoProjector := mongodb.NewMongoProjector(
+		mongoClient.Database(),
+		"users",
+	)
 
 	// messaging
 	// todo move to config
@@ -98,7 +113,11 @@ func main() {
 		ReconnectDelay:    time.Second * 5,
 		ProcessingTimeout: time.Second * 30,
 	}
-	rabbitmqConsumer, err := rabbitmq.NewConsumer(rabbitmqConsumerConfig, mongoProjector)
+	rabbitmqConsumer, err := rabbitmq.NewConsumer(
+		rabbitmqConsumerConfig,
+		mongoProjector,
+		eventRegistry,
+	)
 	if err != nil {
 		log.Fatalf("Failed to create consumer: %v", err)
 	}
