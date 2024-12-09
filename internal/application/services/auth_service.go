@@ -2,12 +2,14 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/ncfex/dcart-auth/internal/application/ports/primary/command"
 	"github.com/ncfex/dcart-auth/internal/application/ports/primary/query"
 	"github.com/ncfex/dcart-auth/internal/application/ports/primary/services"
 	"github.com/ncfex/dcart-auth/internal/application/ports/types"
+	"github.com/ncfex/dcart-auth/pkg/httputil/request"
 )
 
 type authService struct {
@@ -60,8 +62,13 @@ func (as *authService) Login(ctx context.Context, req types.LoginRequest) (*type
 }
 
 func (as *authService) ChangePassword(ctx context.Context, req types.ChangePasswordRequest) error {
+	userID := ctx.Value(request.ContextUserKey).(string)
+	if userID == "" {
+		return fmt.Errorf("change password: %w", errors.New("invalid user id"))
+	}
+
 	changePasswordCmd := command.ChangePasswordCommand{
-		UserID:      req.UserID,
+		UserID:      userID,
 		OldPassword: req.OldPassword,
 		NewPassword: req.NewPassword,
 	}
