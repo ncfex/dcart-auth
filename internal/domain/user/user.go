@@ -72,9 +72,7 @@ func (u *User) ChangePassword(rawOldPassword, rawNewPassword string) error {
 		return err
 	}
 
-	u.PasswordHash = newPasswordHash
-	u.Version += 1
-	event := NewUserPasswordChangedEvent(u.ID, u.PasswordHash, u.GetVersion())
+	event := NewUserPasswordChangedEvent(u.ID, newPasswordHash, u.Version+1)
 	u.Apply(event)
 	u.Changes = append(u.Changes, event)
 
@@ -93,16 +91,14 @@ func (u *User) Apply(event shared.Event) {
 	u.ID = event.GetAggregateID()
 	u.Version = event.GetVersion()
 
-	switch event.GetEventType() {
-	case "USER_REGISTERED":
-		payload := event.GetPayload().(UserRegisteredEventPayload)
-		u.Username = payload.Username
-		u.PasswordHash = payload.PasswordHash
+	switch e := event.(type) {
+	case *UserRegisteredEvent:
+		u.Username = e.Username
+		u.PasswordHash = e.PasswordHash
 		u.CreatedAt = event.GetTimestamp()
 		u.UpdatedAt = event.GetTimestamp()
-	case "USER_PASSWORD_CHANGED":
-		payload := event.GetPayload().(UserPasswordChangedEventPayload)
-		u.PasswordHash = payload.NewPasswordHash
+	case *UserPasswordChangedEvent:
+		u.PasswordHash = e.NewPasswordHash
 		u.UpdatedAt = event.GetTimestamp()
 	}
 }
