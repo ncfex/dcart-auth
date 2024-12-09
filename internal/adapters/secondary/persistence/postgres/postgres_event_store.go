@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/ncfex/dcart-auth/internal/domain/shared"
-	"github.com/ncfex/dcart-auth/internal/domain/user"
 )
 
 type EventMetadata struct {
@@ -22,11 +21,15 @@ type EventMetadata struct {
 }
 
 type PostgresEventStore struct {
-	db *sql.DB
+	db            *sql.DB
+	eventRegistry shared.EventRegistry
 }
 
-func NewPostgresEventStore(db *sql.DB) *PostgresEventStore {
-	return &PostgresEventStore{db: db}
+func NewPostgresEventStore(db *sql.DB, registry shared.EventRegistry) *PostgresEventStore {
+	return &PostgresEventStore{
+		db:            db,
+		eventRegistry: registry,
+	}
 }
 
 func (s *PostgresEventStore) SaveEvents(ctx context.Context, aggregateID string, events []shared.Event) error {
@@ -71,15 +74,15 @@ func (s *PostgresEventStore) SaveEvents(ctx context.Context, aggregateID string,
 	defer stmt.Close()
 
 	for _, event := range events {
-		payload, err := json.Marshal(event.GetPayload())
-		if err != nil {
-			return fmt.Errorf("marshal payload: %w", err)
-		}
-
 		expectedVersion := latestVersion + 1
 		if event.GetVersion() != expectedVersion {
 			return fmt.Errorf("concurrent modification detected: expected version %d, got %d",
 				expectedVersion, event.GetVersion())
+		}
+
+		payload, err := json.Marshal(event)
+		if err != nil {
+			return fmt.Errorf("marshal event: %w", err)
 		}
 
 		_, err = stmt.ExecContext(ctx,
@@ -144,49 +147,27 @@ func (s *PostgresEventStore) GetEventsByType(ctx context.Context, eventType stri
 
 func (s *PostgresEventStore) scanEvents(rows *sql.Rows) ([]shared.Event, error) {
 	var events []shared.Event
-
 	for rows.Next() {
 		var metadata EventMetadata
-		err := rows.Scan(
+		if err := rows.Scan(
 			&metadata.AggregateID,
 			&metadata.AggregateType,
 			&metadata.EventType,
 			&metadata.Version,
 			&metadata.Timestamp,
 			&metadata.Payload,
-		)
-		if err != nil {
+		); err != nil {
 			return nil, fmt.Errorf("scan event: %w", err)
 		}
 
-		// todo improve payload marshal approicah
-		var payload interface{}
-		switch metadata.EventType {
-		case "USER_REGISTERED":
-			var p user.UserRegisteredEventPayload
-			if err := json.Unmarshal(metadata.Payload, &p); err != nil {
-				return nil, fmt.Errorf("unmarshal USER_REGISTERED payload: %w", err)
-			}
-			payload = p
-		case "USER_PASSWORD_CHANGED":
-			var p user.UserPasswordChangedEventPayload
-			if err := json.Unmarshal(metadata.Payload, &p); err != nil {
-				return nil, fmt.Errorf("unmarshal USER_PASSWORD_CHANGED payload: %w", err)
-			}
-			payload = p
-		default:
+		event, ok := s.eventRegistry.CreateEvent(shared.EventType(metadata.EventType))
+		if !ok {
 			return nil, fmt.Errorf("unknown event type: %s", metadata.EventType)
 		}
 
-		event := shared.BaseEvent{
-			AggregateID:   metadata.AggregateID,
-			AggregateType: metadata.AggregateType,
-			EventType:     metadata.EventType,
-			Version:       metadata.Version,
-			Timestamp:     metadata.Timestamp,
-			Payload:       payload,
+		if err := json.Unmarshal(metadata.Payload, event); err != nil {
+			return nil, fmt.Errorf("unmarshal event data: %w", err)
 		}
-
 		events = append(events, event)
 	}
 

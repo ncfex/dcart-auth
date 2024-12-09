@@ -24,27 +24,22 @@ func NewMongoProjector(db *mongo.Database, collectionName string) *MongoProjecto
 }
 
 func (p *MongoProjector) ProjectEvent(ctx context.Context, event shared.Event) error {
-	switch event.GetEventType() {
-	case "USER_REGISTERED":
-		return p.projectUserRegistered(ctx, event)
+	switch e := event.(type) {
+	case *user.UserRegisteredEvent:
+		return p.projectUserRegistered(ctx, e)
 	default:
 		return fmt.Errorf("unsupported event type: %s", event.GetEventType())
 	}
 }
 
-func (p *MongoProjector) projectUserRegistered(ctx context.Context, event shared.Event) error {
-	payload, ok := event.GetPayload().(user.UserRegisteredEventPayload)
-	if !ok {
-		return fmt.Errorf("invalid payload type for USER_REGISTERED event")
-	}
-
+func (p *MongoProjector) projectUserRegistered(ctx context.Context, event *user.UserRegisteredEvent) error {
 	collection := p.db.Collection(p.collectionName)
 
 	filter := bson.M{"_id": event.GetAggregateID()}
 	update := bson.M{
 		"$setOnInsert": bson.M{
 			"_id":        event.GetAggregateID(),
-			"username":   payload.Username,
+			"username":   event.Username,
 			"created_at": event.GetTimestamp(),
 			"updated_at": event.GetTimestamp(),
 			"version":    1,
@@ -52,11 +47,6 @@ func (p *MongoProjector) projectUserRegistered(ctx context.Context, event shared
 	}
 
 	opts := options.Update().SetUpsert(true)
-
 	_, err := collection.UpdateOne(ctx, filter, update, opts)
-	if err != nil {
-		return fmt.Errorf("failed to project USER_REGISTERED event: %w", err)
-	}
-
-	return nil
+	return err
 }
