@@ -9,9 +9,6 @@ import (
 	"github.com/ncfex/dcart-auth/internal/adapters/secondary/persistence/postgres/db"
 	"github.com/ncfex/dcart-auth/internal/application/ports/secondary"
 	tokenDomain "github.com/ncfex/dcart-auth/internal/domain/token"
-	userDomain "github.com/ncfex/dcart-auth/internal/domain/user"
-
-	"github.com/google/uuid"
 )
 
 var (
@@ -32,18 +29,14 @@ func NewTokenRepository(database *database, expiresIn time.Duration) secondary.T
 }
 
 func (r *tokenRepository) Add(ctx context.Context, token *tokenDomain.RefreshToken) error {
-	userID, err := uuid.Parse(token.UserID)
-	if err != nil {
-		return userDomain.ErrInvalidCredentials
-	}
 
 	params := db.CreateRefreshTokenParams{
 		Token:     token.Token,
-		UserID:    userID,
+		UserID:    token.UserID,
 		ExpiresAt: time.Now().Add(r.expiresIn),
 	}
 
-	_, err = r.queries.CreateRefreshToken(ctx, params)
+	_, err := r.queries.CreateRefreshToken(ctx, params)
 	if err != nil {
 		return errors.Join(ErrStoringToken, err)
 	}
@@ -76,11 +69,6 @@ func (r *tokenRepository) Revoke(ctx context.Context, tokenString string) error 
 }
 
 func (r *tokenRepository) Save(ctx context.Context, token *tokenDomain.RefreshToken) error {
-	userID, err := uuid.Parse(token.UserID)
-	if err != nil {
-		return ErrStoringToken
-	}
-
 	revokedAt := sql.NullTime{
 		Time:  token.RevokedAt,
 		Valid: !token.RevokedAt.IsZero(),
@@ -88,15 +76,14 @@ func (r *tokenRepository) Save(ctx context.Context, token *tokenDomain.RefreshTo
 
 	params := db.SaveTokenParams{
 		Token:     token.Token,
-		UserID:    userID,
+		UserID:    token.UserID,
 		CreatedAt: token.CreatedAt,
 		UpdatedAt: token.UpdatedAt,
 		ExpiresAt: token.ExpiresAt,
 		RevokedAt: revokedAt,
 	}
 
-	err = r.queries.SaveToken(ctx, params)
-	if err != nil {
+	if err := r.queries.SaveToken(ctx, params); err != nil {
 		return ErrStoringToken
 	}
 

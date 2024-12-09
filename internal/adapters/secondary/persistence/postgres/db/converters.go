@@ -15,7 +15,7 @@ func ToRefreshTokenDomain(dbToken *RefreshToken) *tokenDomain.RefreshToken {
 
 	return &tokenDomain.RefreshToken{
 		Token:     dbToken.Token,
-		UserID:    dbToken.UserID.String(),
+		UserID:    dbToken.UserID,
 		CreatedAt: dbToken.CreatedAt,
 		UpdatedAt: dbToken.UpdatedAt,
 		ExpiresAt: dbToken.ExpiresAt,

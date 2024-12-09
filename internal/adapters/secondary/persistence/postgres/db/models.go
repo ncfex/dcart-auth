@@ -6,14 +6,23 @@ package db
 
 import (
 	"database/sql"
+	"encoding/json"
 	"time"
-
-	"github.com/google/uuid"
 )
+
+type Event struct {
+	ID            string          `json:"id"`
+	AggregateID   string          `json:"aggregate_id"`
+	AggregateType string          `json:"aggregate_type"`
+	EventType     string          `json:"event_type"`
+	Version       int32           `json:"version"`
+	Timestamp     time.Time       `json:"timestamp"`
+	Payload       json.RawMessage `json:"payload"`
+}
 
 type RefreshToken struct {
 	Token     string       `json:"token"`
-	UserID    uuid.UUID    `json:"user_id"`
+	UserID    string       `json:"user_id"`
 	CreatedAt time.Time    `json:"created_at"`
 	UpdatedAt time.Time    `json:"updated_at"`
 	ExpiresAt time.Time    `json:"expires_at"`

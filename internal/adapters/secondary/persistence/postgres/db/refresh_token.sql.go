@@ -9,8 +9,6 @@ import (
 	"context"
 	"database/sql"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 const createRefreshToken = `-- name: CreateRefreshToken :one
@@ -33,7 +31,7 @@ RETURNING token, user_id, created_at, updated_at, expires_at, revoked_at
 
 type CreateRefreshTokenParams struct {
 	Token     string    `json:"token"`
-	UserID    uuid.UUID `json:"user_id"`
+	UserID    string    `json:"user_id"`
 	ExpiresAt time.Time `json:"expires_at"`
 }
 
@@ -111,7 +109,7 @@ WHERE token = $1
 
 type SaveTokenParams struct {
 	Token     string       `json:"token"`
-	UserID    uuid.UUID    `json:"user_id"`
+	UserID    string       `json:"user_id"`
 	CreatedAt time.Time    `json:"created_at"`
 	UpdatedAt time.Time    `json:"updated_at"`
 	ExpiresAt time.Time    `json:"expires_at"`
