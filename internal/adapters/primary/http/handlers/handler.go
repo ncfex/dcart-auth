@@ -77,6 +77,7 @@ func (h *handler) RegisterRoutes() *http.ServeMux {
 	// protected
 	mux.Handle("GET /profile", accessTokenProtectedChain(http.HandlerFunc(h.profile)))
 	mux.Handle("POST /validate", accessTokenProtectedChain(http.HandlerFunc(h.validateToken)))
+	mux.Handle("PUT /password", accessTokenProtectedChain(http.HandlerFunc(h.changePassword)))
 
 	// refresh required
 	mux.Handle("POST /refresh", refreshTokenRequiredChain(http.HandlerFunc(h.refreshToken)))

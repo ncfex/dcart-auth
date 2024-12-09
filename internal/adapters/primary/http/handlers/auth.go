@@ -40,6 +40,21 @@ func (h *handler) login(w http.ResponseWriter, r *http.Request) {
 	h.responder.RespondWithJSON(w, http.StatusOK, tokenPairResponse)
 }
 
+func (h *handler) changePassword(w http.ResponseWriter, r *http.Request) {
+	var req types.ChangePasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.responder.RespondWithError(w, http.StatusBadRequest, "Invalid request", err)
+		return
+	}
+
+	if err := h.authenticationService.ChangePassword(r.Context(), req); err != nil {
+		h.responder.RespondWithError(w, http.StatusUnauthorized, err.Error(), err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *handler) logout(w http.ResponseWriter, r *http.Request) {
 	refreshToken, err := request.GetBearerToken(r.Header)
 	if err != nil {
