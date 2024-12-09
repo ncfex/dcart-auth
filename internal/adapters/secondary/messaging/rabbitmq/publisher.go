@@ -23,6 +23,7 @@ type RabbitMQAdapter struct {
 	config    RabbitMQConfig
 	conn      *amqp.Connection
 	channel   *amqp.Channel
+	confirms  chan amqp.Confirmation
 	mu        sync.RWMutex
 	connected bool
 }
@@ -58,8 +59,6 @@ func (a *RabbitMQAdapter) PublishEvent(ctx context.Context, event shared.Event) 
 		return fmt.Errorf("message serialization failed: %w", err)
 	}
 
-	confirms := a.channel.NotifyPublish(make(chan amqp.Confirmation, 1))
-
 	msg := amqp.Publishing{
 		ContentType: "application/json",
 		Body:        payload,
@@ -85,7 +84,7 @@ func (a *RabbitMQAdapter) PublishEvent(ctx context.Context, event shared.Event) 
 	}
 
 	select {
-	case confirm := <-confirms:
+	case confirm := <-a.confirms:
 		if !confirm.Ack {
 			return fmt.Errorf("message delivery unconfirmed by broker")
 		}
@@ -130,6 +129,8 @@ func (a *RabbitMQAdapter) initialize() error {
 		conn.Close()
 		return fmt.Errorf("exchange declaration failed: %w", err)
 	}
+
+	a.confirms = ch.NotifyPublish(make(chan amqp.Confirmation, 100))
 
 	a.conn = conn
 	a.channel = ch
