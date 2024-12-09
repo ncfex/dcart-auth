@@ -57,8 +57,8 @@ func (u *User) Authenticate(rawPassword string) bool {
 }
 
 func (u *User) ChangePassword(rawOldPassword, rawNewPassword string) error {
-	oldPwd := Password(rawOldPassword)
-	if !oldPwd.Matches(u.PasswordHash) {
+	ok := u.Authenticate(rawOldPassword)
+	if !ok {
 		return ErrInvalidPassword
 	}
 
