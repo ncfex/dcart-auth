@@ -48,9 +48,14 @@ func (a *RabbitMQAdapter) PublishEvent(ctx context.Context, event shared.Event) 
 	a.mu.RUnlock()
 
 	// todo use gob instead of json
-	payload, err := json.Marshal(event)
+	eventMsg, err := SerializeEvent(event)
 	if err != nil {
 		return fmt.Errorf("event serialization failed: %w", err)
+	}
+
+	payload, err := json.Marshal(eventMsg)
+	if err != nil {
+		return fmt.Errorf("message serialization failed: %w", err)
 	}
 
 	confirms := a.channel.NotifyPublish(make(chan amqp.Confirmation, 1))

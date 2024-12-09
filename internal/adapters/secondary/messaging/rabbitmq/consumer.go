@@ -9,7 +9,6 @@ import (
 
 	"github.com/ncfex/dcart-auth/internal/adapters/secondary/persistence/mongodb"
 	"github.com/ncfex/dcart-auth/internal/domain/shared"
-	"github.com/ncfex/dcart-auth/internal/domain/user"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -28,19 +27,23 @@ type Consumer struct {
 	config    ConsumerConfig
 	conn      *amqp.Connection
 	channel   *amqp.Channel
-	projector *mongodb.MongoProjector
 	mu        sync.RWMutex
 	connected bool
 	stopChan  chan struct{}
 	done      chan struct{}
+
+	// app
+	projector     *mongodb.MongoProjector // use port
+	eventRegistry shared.EventRegistry
 }
 
-func NewConsumer(config ConsumerConfig, projector *mongodb.MongoProjector) (*Consumer, error) {
+func NewConsumer(config ConsumerConfig, projector *mongodb.MongoProjector, eventRegistry shared.EventRegistry) (*Consumer, error) {
 	consumer := &Consumer{
-		config:    config,
-		projector: projector,
-		stopChan:  make(chan struct{}),
-		done:      make(chan struct{}),
+		config:        config,
+		stopChan:      make(chan struct{}),
+		done:          make(chan struct{}),
+		projector:     projector,
+		eventRegistry: eventRegistry,
 	}
 
 	if err := consumer.initialize(); err != nil {
@@ -225,38 +228,9 @@ func (c *Consumer) processDelivery(ctx context.Context, delivery amqp.Delivery) 
 		return
 	}
 
-	event := shared.BaseEvent{
-		AggregateID:   eventMsg.AggregateID,
-		AggregateType: eventMsg.AggregateType,
-		EventType:     eventMsg.EventType,
-		Version:       eventMsg.Version,
-		Timestamp:     eventMsg.Timestamp,
-	}
-
-	// todo improve
-	switch eventMsg.EventType {
-	case "USER_REGISTERED":
-		var payload user.UserRegisteredEventPayload
-		if err := json.Unmarshal(eventMsg.Payload, &payload); err != nil {
-			c.handleProcessingError(delivery, fmt.Errorf("payload deserialization failed: %w", err), "invalid payload format")
-			return
-		}
-		event.Payload = payload
-
-	case "USER_PASSWORD_CHANGED":
-		var payload user.UserPasswordChangedEventPayload
-		if err := json.Unmarshal(eventMsg.Payload, &payload); err != nil {
-			c.handleProcessingError(delivery, fmt.Errorf("payload deserialization failed: %w", err), "invalid payload format")
-			return
-		}
-		event.Payload = payload
-
-	default:
-		c.handleProcessingError(
-			delivery,
-			fmt.Errorf("unsupported event type: %s", eventMsg.EventType),
-			"unknown event type",
-		)
+	event, err := DeserializeEvent(&eventMsg, c.eventRegistry)
+	if err != nil {
+		c.handleProcessingError(delivery, fmt.Errorf("event deserialization failed: %w", err), "invalid event format")
 		return
 	}
 
