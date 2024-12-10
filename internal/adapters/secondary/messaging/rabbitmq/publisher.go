@@ -2,13 +2,13 @@ package rabbitmq
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
 
 	"github.com/ncfex/dcart-auth/internal/domain/shared"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"google.golang.org/protobuf/proto"
 )
 
 type RabbitMQConfig struct {
@@ -48,19 +48,19 @@ func (a *RabbitMQAdapter) PublishEvent(ctx context.Context, event shared.Event) 
 	}
 	a.mu.RUnlock()
 
-	// todo use gob instead of json
+	// todo add generic marshaler
 	eventMsg, err := SerializeEvent(event)
 	if err != nil {
 		return fmt.Errorf("event serialization failed: %w", err)
 	}
 
-	payload, err := json.Marshal(eventMsg)
+	payload, err := proto.Marshal(eventMsg)
 	if err != nil {
-		return fmt.Errorf("message serialization failed: %w", err)
+		return fmt.Errorf("event message serialization failed: %w", err)
 	}
 
 	msg := amqp.Publishing{
-		ContentType: "application/json",
+		ContentType: "application/protobuf",
 		Body:        payload,
 		Timestamp:   event.GetTimestamp(),
 		Headers: amqp.Table{

@@ -2,14 +2,16 @@ package rabbitmq
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
 
+	pb "github.com/ncfex/dcart-auth/internal/adapters/secondary/messaging/proto"
 	"github.com/ncfex/dcart-auth/internal/adapters/secondary/persistence/mongodb"
 	"github.com/ncfex/dcart-auth/internal/domain/shared"
+
 	amqp "github.com/rabbitmq/amqp091-go"
+	"google.golang.org/protobuf/proto"
 )
 
 type ConsumerConfig struct {
@@ -222,8 +224,14 @@ func (c *Consumer) processDelivery(ctx context.Context, delivery amqp.Delivery) 
 	processCtx, cancel := context.WithTimeout(ctx, c.config.ProcessingTimeout)
 	defer cancel()
 
-	var eventMsg EventMessage
-	if err := json.Unmarshal(delivery.Body, &eventMsg); err != nil {
+	// todo add genetic unmarshaler
+	if delivery.ContentType != "application/protobuf" {
+		c.handleProcessingError(delivery, fmt.Errorf("unexpected content type: %s", delivery.ContentType), "invalid message format")
+		return
+	}
+
+	var eventMsg pb.EventMessage
+	if err := proto.Unmarshal(delivery.Body, &eventMsg); err != nil {
 		c.handleProcessingError(delivery, fmt.Errorf("payload deserialization failed: %w", err), "invalid message format")
 		return
 	}

@@ -1,0 +1,34 @@
+syntax = "proto3";
+package event;
+
+option go_package = "github.com/ncfex/dcart-auth/internal/adapters/secondary/messaging/proto";
+
+import "google/protobuf/timestamp.proto";
+
+message BaseEvent {
+  string aggregate_id = 1;
+  string aggregate_type = 2;
+  string event_type = 3;
+  int32 version = 4;
+  google.protobuf.Timestamp timestamp = 5;
+}
+
+message EventMessage {
+  string aggregate_id = 1;
+  string aggregate_type = 2;
+  string event_type = 3;
+  int32 version = 4;
+  google.protobuf.Timestamp timestamp = 5;
+  bytes payload = 6;
+}
+
+message UserRegisteredEvent {
+  BaseEvent base = 1;
+  string username = 2;
+  string password_hash = 3;
+}
+
+message UserPasswordChangedEvent {
+  BaseEvent base = 1;
+  string new_password_hash = 2;
+}
